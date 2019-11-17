@@ -22,8 +22,8 @@ import {
 } from 'react-native';
 
 import Constants from './services/Constants';
-
-// import {PermissionsAndroid} from 'react-native';
+import {requestGeolocationPermission} from './services/Permission';
+import MqttService from './services/MqttService';
 
 import MapView from 'react-native-maps';
 import {Marker} from 'react-native-maps';
@@ -35,36 +35,9 @@ import KeepAwake from 'react-native-keep-awake';
 import UserInactivity from 'react-native-user-inactivity';
 import SystemSetting from 'react-native-system-setting';
 
-import mqtt from 'mqtt/dist/mqtt';
+// import mqtt from 'mqtt/dist/mqtt';
 
 console.disableYellowBox = true;
-
-// async function requestGeolocationPermission() {
-//   try {
-//     const granted = await PermissionsAndroid.request(
-//       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-//       {
-//         title: 'Geolocation access request',
-//         message:
-//           'NoobRider needs access to your GPS ' +
-//           'so you can take all features.',
-//         buttonNeutral: 'Ask Me Later',
-//         buttonNegative: 'Cancel',
-//         buttonPositive: 'OK',
-//       },
-//     );
-//     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-//       console.log('You can use the GPS');
-//       console.log(Constants.DIR_ICON_NAVIGATION);
-//       return true;
-//     } else {
-//       console.log('GPS permission denied');
-//       return false;
-//     }
-//   } catch (err) {
-//     console.warn(err);
-//   }
-// }
 
 const B = props => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>;
 
@@ -87,30 +60,33 @@ export default class App extends React.Component {
 
   testMqtt() {
     // var mqtt = require('mqtt/dist/mqtt');
-    this.mqttClient = mqtt.connect(Constants.URL_MQTT_CONNECTION); //WEBSOCKET ONLY
+    // this.mqttClient = mqtt.connect(Constants.URL_MQTT_CONNECTION); //WEBSOCKET ONLY
+    // this.mqttClient.on('connect', () => {
+    //   this.setState({isMqttConnected: this.mqttClient.connected});
+    //   // client.subscribe('presence', function(err) {
+    //   //   if (!err) {
+    //   //     // setInterval(() => client.publish('/hello', 'Hello mqtt'), 1000);
+    //   //   } else
+    //   //     alert(err);
+    //   // });
+    // });
 
-    this.mqttClient.on('connect', () => {
-      this.setState({isMqttConnected: this.mqttClient.connected});
-      // client.subscribe('presence', function(err) {
-      //   if (!err) {
-      //     // setInterval(() => client.publish('/hello', 'Hello mqtt'), 1000);
-      //   } else
-      //     alert(err);
-      // });
-    });
+    // this.mqttClient.on('offline', () => {
+    //   this.setState({isMqttConnected: this.mqttClient.connected});
+    // });
 
-    this.mqttClient.on('offline', () => {
-      this.setState({isMqttConnected: this.mqttClient.connected});
-    });
+    // this.mqttClient.on('error', function(error) {
+    //   alert(error);
+    // });
 
-    this.mqttClient.on('error', function(error) {
-      alert(error);
-    });
-
-    this.mqttClient.on('message', function(topic, message) {
-      // message is Buffer
-      console.log(message.toString());
-      // mqttClient.end();
+    // this.mqttClient.on('message', function(topic, message) {
+    //   // message is Buffer
+    //   console.log(message.toString());
+    //   // mqttClient.end();
+    // });
+    this.mqttService = new MqttService();
+    this.mqttService.connect(Constants.URL_MQTT_CONNECTION, () => {
+      this.setState({isMqttConnected: true});
     });
   }
 

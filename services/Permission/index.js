@@ -1,7 +1,7 @@
 import {PermissionsAndroid} from 'react-native';
 import Constants from '../Constants';
 
-async function requestGeolocationPermission() {
+export async function requestGeolocationPermission() {
   try {
     const granted = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
