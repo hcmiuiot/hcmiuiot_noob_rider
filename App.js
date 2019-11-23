@@ -25,8 +25,9 @@ import Constants from './services/Constants';
 import {requestGeolocationPermission} from './services/Permission';
 import MqttService from './services/MqttService';
 
-import MapView from 'react-native-maps';
-import {Marker} from 'react-native-maps';
+import MapView, {Marker} from 'react-native-maps';
+
+import ConfigScreeen from './screens/ConfigScreen';
 
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
@@ -34,8 +35,6 @@ import Geolocation from 'react-native-geolocation-service';
 import KeepAwake from 'react-native-keep-awake';
 import UserInactivity from 'react-native-user-inactivity';
 import SystemSetting from 'react-native-system-setting';
-
-// import mqtt from 'mqtt/dist/mqtt';
 
 console.disableYellowBox = true;
 
@@ -55,35 +54,11 @@ export default class App extends React.Component {
       },
       isMqttConnected: false,
       isFollowUser: true,
+      showConfigScreen: false,
     };
   }
 
   testMqtt() {
-    // var mqtt = require('mqtt/dist/mqtt');
-    // this.mqttClient = mqtt.connect(Constants.URL_MQTT_CONNECTION); //WEBSOCKET ONLY
-    // this.mqttClient.on('connect', () => {
-    //   this.setState({isMqttConnected: this.mqttClient.connected});
-    //   // client.subscribe('presence', function(err) {
-    //   //   if (!err) {
-    //   //     // setInterval(() => client.publish('/hello', 'Hello mqtt'), 1000);
-    //   //   } else
-    //   //     alert(err);
-    //   // });
-    // });
-
-    // this.mqttClient.on('offline', () => {
-    //   this.setState({isMqttConnected: this.mqttClient.connected});
-    // });
-
-    // this.mqttClient.on('error', function(error) {
-    //   alert(error);
-    // });
-
-    // this.mqttClient.on('message', function(topic, message) {
-    //   // message is Buffer
-    //   console.log(message.toString());
-    //   // mqttClient.end();
-    // });
     this.mqttService = new MqttService();
     this.mqttService.connect(Constants.URL_MQTT_CONNECTION, () => {
       this.setState({isMqttConnected: true});
@@ -181,27 +156,54 @@ export default class App extends React.Component {
       <UserInactivity
         timeForInactivity={100000}
         onAction={isActive => this.handleUserActivity(isActive)}>
+        {/* <ConfigScreeen /> */}
         <View style={style.container}>
-          <MapView
-            style={style.map}
-            initialRegion={{
-              latitude: 10.8381656,
-              longitude: 106.6302742,
-              latitudeDelta: 0.0,
-              longitudeDelta: 0.0,
-            }}
-            ref={ref => (this.mapView = ref)}
-            onMapReady={this.onMapReadyEvent}
-            loadingEnabled={true}>
-            <Marker
-              coordinate={this.state.myGPS.coord}
-              image={require('./assets/icons/navigation.png')}
-              rotation={this.state.myGPS.heading}
-              flat={true}
-              opacity={0.8}
-              title="Your bike"
-              description={'Winner 59G2-29876'}
-            />
+          <View style={style.mapView}>
+            <MapView
+              style={StyleSheet.absoluteFillObject}
+              initialRegion={{
+                latitude: 10.8381656,
+                longitude: 106.6302742,
+                latitudeDelta: 0.0,
+                longitudeDelta: 0.0,
+              }}
+              ref={ref => (this.mapView = ref)}
+              onMapReady={this.onMapReadyEvent}
+              loadingEnabled={true}>
+              <Marker
+                coordinate={this.state.myGPS.coord}
+                image={require('./assets/icons/navigation.png')}
+                rotation={this.state.myGPS.heading}
+                flat={true}
+                opacity={0.8}
+                title="Your bike"
+                description={'Winner 59G2-29876'}
+              />
+            </MapView>
+            {this.state.showConfigScreen && (
+              // <View
+              //   style={{
+              //     width: '30%',
+              //     height: '100%',
+              //     backgroundColor: 'red',
+              //   }}></View>
+              <ConfigScreeen />
+            )}
+            {!this.state.showConfigScreen && (
+              <View style={style.menuIconView}>
+                <TouchableOpacity
+                  style={StyleSheet.absoluteFillObject}
+                  onPress={() => this.setState({showConfigScreen: true})}>
+                  <Icon
+                    name="bars"
+                    size={30}
+                    color="black"
+                    style={StyleSheet.absoluteFillObject}
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
+
             <View style={style.switchArea}>
               <Text style={{bottom: -5}}>Auto-center</Text>
               <Switch
@@ -210,7 +212,8 @@ export default class App extends React.Component {
                 onValueChange={value => this.setState({isFollowUser: value})}
               />
             </View>
-          </MapView>
+          </View>
+
           <View style={style.toolbox}>
             <View style={style.toolView}>
               <View style={style.toolViewLeft}>
@@ -279,13 +282,11 @@ export default class App extends React.Component {
 }
 
 const style = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  map: {
+  container: StyleSheet.absoluteFillObject,
+  mapView: {
     width: '100%',
     height: '80%',
-    alignItems: 'flex-end',
+    // alignItems: 'flex-end',
   },
   toolbox: {
     width: '100%',
@@ -350,6 +351,7 @@ const style = StyleSheet.create({
     fontSize: 16,
   },
   switchArea: {
+    // alignSelf: 'flex-end',
     position: 'absolute',
     bottom: 0,
     right: 0,
@@ -361,7 +363,7 @@ const style = StyleSheet.create({
   },
   trackSwitch: {
     // position: 'absolute',
-    // alignSelf: 'flex-end',
+    // // alignSelf: 'flex-end',
     // bottom: 0,
     // right: 0,
     // width: 60,
@@ -402,5 +404,16 @@ const style = StyleSheet.create({
   },
   sendIcon: {
     //
+  },
+  menuIconView: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: 30,
+    height: 30,
+    marginTop: 5,
+    marginLeft: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
