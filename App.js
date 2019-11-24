@@ -18,7 +18,6 @@ import {
   TextInput,
   TouchableOpacity,
   Switch,
-  Alert,
 } from 'react-native';
 
 import Constants from './services/Constants';
@@ -33,8 +32,6 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 
 import Geolocation from 'react-native-geolocation-service';
 import KeepAwake from 'react-native-keep-awake';
-import UserInactivity from 'react-native-user-inactivity';
-import SystemSetting from 'react-native-system-setting';
 
 console.disableYellowBox = true;
 
