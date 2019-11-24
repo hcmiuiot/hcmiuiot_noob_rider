@@ -20,5 +20,4 @@ export default class MqttService {
   registerCallback(eventType, callback) {
     this.mqttClient.on(eventType, callback);
   }
-
 }

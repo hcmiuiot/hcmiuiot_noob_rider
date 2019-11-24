@@ -70,7 +70,7 @@ export default class App extends React.Component {
       console.log('GPS is ready!');
       Geolocation.watchPosition(
         position => {
-          console.log(position);
+          // console.log(position);
           this.setState({
             myGPS: {
               coord: {
@@ -128,90 +128,96 @@ export default class App extends React.Component {
   }
 
   handleUserActivity(isActive) {
-    if (!isActive) {
-      // SystemSetting.grantWriteSettingPremission();
-      SystemSetting.setBrightnessForce(0).then(success => {
-        !success &&
-          Alert.alert(
-            'Permission request',
-            'Please give me a permission changing settings pls!',
-            [
-              {
-                text: 'Open Setting',
-                onPress: () => SystemSetting.grantWriteSettingPremission(),
-              },
-            ],
-          );
-      });
-      SystemSetting.saveBrightness();
-    } else {
-      SystemSetting.restoreBrightness();
-    }
+    // if (!isActive) {
+    //   // SystemSetting.grantWriteSettingPremission();
+    //   SystemSetting.setBrightnessForce(0).then(success => {
+    //     !success &&
+    //       Alert.alert(
+    //         'Permission request',
+    //         'Please give me a permission changing settings pls!',
+    //         [
+    //           {
+    //             text: 'Open Setting',
+    //             onPress: () => SystemSetting.grantWriteSettingPremission(),
+    //           },
+    //         ],
+    //       );
+    //   });
+    //   SystemSetting.saveBrightness();
+    // } else {
+    //   SystemSetting.restoreBrightness();
+    // }
   }
 
   componentDidMount() {}
 
   render() {
     return (
-      <UserInactivity
-        timeForInactivity={100000}
-        onAction={isActive => this.handleUserActivity(isActive)}>
-        {/* <ConfigScreeen /> */}
-        <View style={style.container}>
-          <View style={style.mapView}>
-            <MapView
-              style={StyleSheet.absoluteFillObject}
-              initialRegion={{
-                latitude: 10.8381656,
-                longitude: 106.6302742,
-                latitudeDelta: 0.0,
-                longitudeDelta: 0.0,
+      // <UserInactivity
+      //   timeForInactivity={100000}
+      //   onAction={isActive => this.handleUserActivity(isActive)}>
+      // {/* <ConfigScreeen /> */}
+      <View style={style.container}>
+        <View style={style.mapView}>
+          <MapView
+            style={StyleSheet.absoluteFillObject}
+            initialRegion={{
+              latitude: 10.8381656,
+              longitude: 106.6302742,
+              latitudeDelta: 0.0,
+              longitudeDelta: 0.0,
+            }}
+            ref={ref => (this.mapView = ref)}
+            onMapReady={this.onMapReadyEvent}
+            loadingEnabled={true}>
+            <Marker
+              coordinate={this.state.myGPS.coord}
+              image={require('./assets/icons/navigation.png')}
+              rotation={this.state.myGPS.heading}
+              flat={true}
+              opacity={0.8}
+              title="Your bike"
+              description={'Winner 59G2-29876'}
+            />
+          </MapView>
+          {this.state.showConfigScreen && (
+            // <View
+            //   style={{
+            //     width: '30%',
+            //     height: '100%',
+            //     backgroundColor: 'red',
+            //   }}></View>
+            <ConfigScreeen
+              onGoBack={() => {
+                this.setState({showConfigScreen: false});
               }}
-              ref={ref => (this.mapView = ref)}
-              onMapReady={this.onMapReadyEvent}
-              loadingEnabled={true}>
-              <Marker
-                coordinate={this.state.myGPS.coord}
-                image={require('./assets/icons/navigation.png')}
-                rotation={this.state.myGPS.heading}
-                flat={true}
-                opacity={0.8}
-                title="Your bike"
-                description={'Winner 59G2-29876'}
-              />
-            </MapView>
-            {this.state.showConfigScreen && (
-              // <View
-              //   style={{
-              //     width: '30%',
-              //     height: '100%',
-              //     backgroundColor: 'red',
-              //   }}></View>
-              <ConfigScreeen />
-            )}
-            {!this.state.showConfigScreen && (
-              <View style={style.menuIconView}>
-                <TouchableOpacity
+              onSave={() => {
+                this.setState({showConfigScreen: false});
+              }}
+            />
+          )}
+          {!this.state.showConfigScreen && (
+            <View style={style.menuIconView}>
+              <TouchableOpacity
+                style={StyleSheet.absoluteFillObject}
+                onPress={() => this.setState({showConfigScreen: true})}>
+                <Icon
+                  name="bars"
+                  size={30}
+                  color="black"
                   style={StyleSheet.absoluteFillObject}
-                  onPress={() => this.setState({showConfigScreen: true})}>
-                  <Icon
-                    name="bars"
-                    size={30}
-                    color="black"
-                    style={StyleSheet.absoluteFillObject}
-                  />
-                </TouchableOpacity>
-              </View>
-            )}
-
-            <View style={style.switchArea}>
-              <Text style={{bottom: -5}}>Auto-center</Text>
-              <Switch
-                style={style.trackSwitch}
-                value={this.state.isFollowUser}
-                onValueChange={value => this.setState({isFollowUser: value})}
-              />
+                />
+              </TouchableOpacity>
             </View>
+          )}
+
+          <View style={style.switchArea}>
+            <Text style={{bottom: -5}}>Auto-center</Text>
+            <Switch
+              style={style.trackSwitch}
+              value={this.state.isFollowUser}
+              onValueChange={value => this.setState({isFollowUser: value})}
+            />
           </View>
 
           <View style={style.toolbox}>
@@ -276,7 +282,8 @@ export default class App extends React.Component {
             </View>
           </View>
         </View>
-      </UserInactivity>
+      </View>
+      // </UserInactivity>
     );
   }
 }
@@ -285,15 +292,18 @@ const style = StyleSheet.create({
   container: StyleSheet.absoluteFillObject,
   mapView: {
     width: '100%',
-    height: '80%',
+    height: '100%',
     // alignItems: 'flex-end',
   },
   toolbox: {
+    position: 'absolute',
     width: '100%',
     height: '20%',
     // marginBottom: 0,
     // backgroundColor: 'yellow',
     justifyContent: 'center',
+    bottom: 0,
+    opacity: 0.85,
   },
   toolView: {
     width: '100%',
@@ -333,7 +343,7 @@ const style = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     // alignSelf: 'flex-end',
-    backgroundColor: '#845EC2CC',
+    backgroundColor: '#845EC2',
     color: 'white',
   },
   connectBtnDisabled: {
@@ -353,7 +363,7 @@ const style = StyleSheet.create({
   switchArea: {
     // alignSelf: 'flex-end',
     position: 'absolute',
-    bottom: 0,
+    bottom: '20%',
     right: 0,
     width: 150,
     height: 30,
