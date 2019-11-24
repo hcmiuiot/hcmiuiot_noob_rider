@@ -14,11 +14,14 @@ import {
   StyleSheet,
   ScrollView,
   View,
+  StatusBar,
   Text,
   TextInput,
   TouchableOpacity,
   Switch,
 } from 'react-native';
+
+import ChatBox from './components/ChatBox';
 
 import Constants from './services/Constants';
 import {requestGeolocationPermission} from './services/Permission';
@@ -32,6 +35,9 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 
 import Geolocation from 'react-native-geolocation-service';
 import KeepAwake from 'react-native-keep-awake';
+
+import LinearGradient from 'react-native-linear-gradient';
+import ChatBadge from './components/ChatBox/ChatBadge';
 
 console.disableYellowBox = true;
 
@@ -111,7 +117,7 @@ export default class App extends React.Component {
         error => {},
         {
           enableHighAccuracy: true,
-          distanceFilter: 1,
+          distanceFilter: 3,
           interval: 3000,
           fastestInterval: 2000,
           forceRequestLocation: true,
@@ -124,40 +130,19 @@ export default class App extends React.Component {
     this.testMqtt();
   }
 
-  handleUserActivity(isActive) {
-    // if (!isActive) {
-    //   // SystemSetting.grantWriteSettingPremission();
-    //   SystemSetting.setBrightnessForce(0).then(success => {
-    //     !success &&
-    //       Alert.alert(
-    //         'Permission request',
-    //         'Please give me a permission changing settings pls!',
-    //         [
-    //           {
-    //             text: 'Open Setting',
-    //             onPress: () => SystemSetting.grantWriteSettingPremission(),
-    //           },
-    //         ],
-    //       );
-    //   });
-    //   SystemSetting.saveBrightness();
-    // } else {
-    //   SystemSetting.restoreBrightness();
-    // }
-  }
-
   componentDidMount() {}
 
   render() {
     return (
-      // <UserInactivity
-      //   timeForInactivity={100000}
-      //   onAction={isActive => this.handleUserActivity(isActive)}>
-      // {/* <ConfigScreeen /> */}
       <View style={style.container}>
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor="transparent"
+          translucent
+        />
         <View style={style.mapView}>
           <MapView
-            style={StyleSheet.absoluteFillObject}
+            style={[StyleSheet.absoluteFillObject]}
             initialRegion={{
               latitude: 10.8381656,
               longitude: 106.6302742,
@@ -166,7 +151,8 @@ export default class App extends React.Component {
             }}
             ref={ref => (this.mapView = ref)}
             onMapReady={this.onMapReadyEvent}
-            loadingEnabled={true}>
+            loadingEnabled={true}
+            showsCompass={false}>
             <Marker
               coordinate={this.state.myGPS.coord}
               image={require('./assets/icons/navigation.png')}
@@ -178,12 +164,6 @@ export default class App extends React.Component {
             />
           </MapView>
           {this.state.showConfigScreen && (
-            // <View
-            //   style={{
-            //     width: '30%',
-            //     height: '100%',
-            //     backgroundColor: 'red',
-            //   }}></View>
             <ConfigScreeen
               onGoBack={() => {
                 this.setState({showConfigScreen: false});
@@ -201,35 +181,37 @@ export default class App extends React.Component {
                 <Icon
                   name="bars"
                   size={30}
-                  color="black"
+                  color="#11111188"
                   style={StyleSheet.absoluteFillObject}
                 />
               </TouchableOpacity>
             </View>
           )}
 
-          <View style={style.switchArea}>
+          {/* <View style={style.switchArea}>
             <Text style={{bottom: -5}}>Auto-center</Text>
             <Switch
               style={style.trackSwitch}
               value={this.state.isFollowUser}
               onValueChange={value => this.setState({isFollowUser: value})}
             />
-          </View>
+          </View> */}
 
-          <View style={style.toolbox}>
-            <View style={style.toolView}>
-              <View style={style.toolViewLeft}>
-                <View style={style.speedView}>
+          {/* <View style={style.toolbox}> */}
+          {/* <View style={style.toolView}> */}
+          {/* <View style={style.toolViewLeft}> */}
+          {/* <View style={style.speedView}>
                   <Text
                     style={[
                       style.statusText,
-                      {fontSize: 50, fontWeight: 'bold'},
+                      {fontSize: 70, fontWeight: 'bold'},
                     ]}>
                     {Math.round(this.state.myGPS.speed)}
                   </Text>
-                  <Text style={[style.statusText, {fontSize: 12}]}>km/h</Text>
-                </View>
+                  <Text style={[style.statusText, {fontSize: 22}]}>km/h</Text>
+                </View> */}
+
+          {/*
                 {this.state.isMqttConnected && (
                   <TouchableOpacity style={style.connectBtnDisabled} disabled>
                     <Text style={style.connectText}>Connected</Text>
@@ -241,30 +223,49 @@ export default class App extends React.Component {
                     onPress={() => this.connect2Mqtt()}>
                     <Text style={style.connectText}>Connect now</Text>
                   </TouchableOpacity>
-                )}
-              </View>
-              <View style={[style.toolViewRight]}>
-                <ScrollView style={[style.chatScrollView]}>
-                  <Text style={style.chatText}>
-                    <B>Thuan:</B> Follow me{'\n'}
-                    <B>Tuan:</B> Follow me{'\n'}
-                    <B>Thuan:</B> Follow me{'\n'}
-                    <B>Tuan:</B> Follow me{'\n'}
-                    <B>Thuan:</B> Follow me{'\n'}
-                    <B>Tuan:</B> Follow me{'\n'}
-                    <B>Thuan:</B> Follow me{'\n'}
-                    <B>Tuan:</B> Follow me{'\n'}
-                    <B>Thuan:</B> Follow me{'\n'}
-                    <B>Tuan:</B> Follow me{'\n'}
-                    <B>Thuan:</B> Follow me{'\n'}
-                    <B>Tuan:</B> Follow me{'\n'}
-                    <B>Thuan:</B> Follow me{'\n'}
-                    <B>Tuan:</B> Follow me{'\n'}
-                    <B>Thuan:</B> Follow me{'\n'}
-                    <B>Tuan:</B> Follow me{'\n'}
-                  </Text>
-                </ScrollView>
-                <View style={style.chatView}>
+                )} */}
+          {/* </View> */}
+
+          {/* <LinearGradient colors={['#00000000', '#00000000', '#00000000']}> */}
+          {!this.state.showConfigScreen && (
+            <View style={[style.toolbox]}>
+              <ChatBox style={style.chatScrollView}>
+                <ChatBadge
+                  sender="Jerry"
+                  text="Huê ở đâu a e kéo xuống chơi chung nè"
+                  received
+                />
+                <ChatBadge sender="Tuan" text="Giữa rừng nha e" received />
+                <ChatBadge sender="Jerry" text="Chơi mình đi nha!" received />
+                <ChatBadge
+                  sender="Tung"
+                  text="Mang theo ổ điện nha 😐"
+                  received
+                />
+                <ChatBadge sender="Tuan" text="Có vẻ đầy ae hã" received />
+                <ChatBadge
+                  sender="Tung"
+                  text="ko đông cũng thiếu ổ điện :))"
+                  received
+                />
+                <ChatBadge
+                  sender="Tung"
+                  text="mua bánh mì ăn trưa với :))"
+                  received
+                  hideSender
+                />
+                <ChatBadge sender="Thuan" text="Nhắn sớm vl" />
+                <ChatBadge sender="Thuan" text="À há" received />
+                <ChatBadge sender="Tung" text="rip :)))" received />
+                <ChatBadge
+                  sender="Tung"
+                  text="thuê ở bình nguyên luôn"
+                  received
+                  hideSender
+                />
+              </ChatBox>
+
+              {/* <View style={style.chatView}>
                   <TextInput style={style.chatInput} />
                   <TouchableOpacity style={style.chatBtn}>
                     <Icon
@@ -274,13 +275,14 @@ export default class App extends React.Component {
                       style={this.sendButton}
                     />
                   </TouchableOpacity>
-                </View>
-              </View>
+                </View> */}
             </View>
-          </View>
+          )}
+          {/* </LinearGradient> */}
+          {/* </View> */}
+          {/* </View> */}
         </View>
       </View>
-      // </UserInactivity>
     );
   }
 }
@@ -295,12 +297,12 @@ const style = StyleSheet.create({
   toolbox: {
     position: 'absolute',
     width: '100%',
-    height: '20%',
+    height: '40%',
     // marginBottom: 0,
     // backgroundColor: 'yellow',
     justifyContent: 'center',
     bottom: 0,
-    opacity: 0.85,
+    // opacity: 0.85,
   },
   toolView: {
     width: '100%',
@@ -319,7 +321,7 @@ const style = StyleSheet.create({
   toolViewRight: {
     flex: 1,
     height: '100%',
-    backgroundColor: '#DAEBF2',
+    backgroundColor: '#DAEBF200',
     // flexDirection: 'column',
   },
   statusText: {
@@ -328,10 +330,10 @@ const style = StyleSheet.create({
   },
   speedView: {
     width: '100%',
-    height: '75%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#B39CD066',
+    backgroundColor: 'transparent',
   },
   connectBtn: {
     width: '100%',
@@ -340,7 +342,8 @@ const style = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     // alignSelf: 'flex-end',
-    backgroundColor: '#845EC2',
+    backgroundColor: '#998BBA',
+    opacity: 1,
     color: 'white',
   },
   connectBtnDisabled: {
@@ -418,8 +421,8 @@ const style = StyleSheet.create({
     top: 0,
     width: 30,
     height: 30,
-    marginTop: 5,
-    marginLeft: 5,
+    marginTop: 30,
+    margin: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },

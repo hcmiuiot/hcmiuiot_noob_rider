@@ -27,7 +27,7 @@ export default class ConfigScreeeen extends Component {
     this.loadSavedConfigs2UI();
     Animated.timing(this.state.opacity, {
       toValue: 1,
-      duration: 100,
+      duration: 200,
     }).start();
   }
 
