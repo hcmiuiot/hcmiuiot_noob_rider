@@ -13,7 +13,7 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 
 import Storage from '../../services/Storage';
 
-export default class ConfigScreeen extends Component {
+export default class ConfigScreen extends Component {
   constructor(props) {
     super(props);
     this.state = {
