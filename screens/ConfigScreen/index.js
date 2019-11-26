@@ -86,16 +86,24 @@ export default class ConfigScreen extends Component {
         />
         <View style={style.bottomView}>
           <TouchableOpacity
-            style={[style.controlInput, style.button]}
-            onPress={this.onSave}>
-            <Icon name="check-double" size={14} style={style.btnIcon} />
-            <Text style={style.btnText}>Save</Text>
+            style={[
+              style.controlInput,
+              style.button,
+              {backgroundColor: '#56BA9E55'},
+            ]}
+            onPress={this.onGoBack}>
+            <Icon name="angle-double-left" size={18} style={style.btnIcon} />
+            <Text style={style.btnText}>Back</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[style.controlInput, style.button]}
-            onPress={this.onGoBack}>
-            <Icon name="angle-double-left" size={16} style={style.btnIcon} />
-            <Text style={style.btnText}>Back</Text>
+            style={[
+              style.controlInput,
+              style.button,
+              {backgroundColor: '#B4E88188'},
+            ]}
+            onPress={this.onSave}>
+            <Icon name="link" size={18} style={style.btnIcon} />
+            <Text style={style.btnText}>{'Save & Connect'}</Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
@@ -139,8 +147,8 @@ const style = StyleSheet.create({
     borderRadius: 20,
     borderColor: 'white',
     borderWidth: 1,
-    backgroundColor: '#92AFB555',
-    color: '#364958',
+    backgroundColor: '#55828B22',
+    color: 'black',
     fontSize: 14,
     alignItems: 'center',
     paddingHorizontal: 20,
@@ -164,6 +172,6 @@ const style = StyleSheet.create({
   },
   btnText: {
     color: '#39393A',
-    fontSize: 16,
+    fontSize: 17,
   },
 });

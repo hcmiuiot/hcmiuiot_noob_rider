@@ -1,10 +1,11 @@
 import React, {Component} from 'react';
+import PropTypes from 'prop-types';
 
 import {
   StyleSheet,
   View,
   ScrollView,
-  Text,
+  // Text,
   TextInput,
   TouchableOpacity,
 } from 'react-native';
@@ -27,17 +28,23 @@ export default class ChatBox extends Component {
   }
 
   addNewChatBadge(sender, msg, received = true) {
-    const newBadgeProps = {sender, msg, received};
+    const lastSender = this.state.badges[this.state.badges.length - 1] || null;
+    let hideSender = lastSender && lastSender.sender === sender;
+    const newBadgeProps = {sender, msg, received, hideSender};
     this.setState({badges: [...this.state.badges, newBadgeProps]});
-    Sound.play(Sound.SAX_ROLL);
+    Sound.play(Sound.QUACK);
   }
 
   onSendMsg() {
-    this.addNewChatBadge('sender', 'Hello World');
+    let msg2Send = this.state.chatText;
+    if (this.props.sender && msg2Send) {
+      this.setState({chatText: ''});
+      this.addNewChatBadge(this.props.sender, msg2Send);
+    }
   }
 
   componentDidUpdate() {
-    this.msgView.scrollToEnd({animated: true, duration: 100});
+    // this.msgView.scrollToEnd({animated: true, duration: 1000});
   }
 
   render() {
@@ -46,14 +53,17 @@ export default class ChatBox extends Component {
         <View style={style.msgView}>
           <ScrollView
             showsHorizontalScrollIndicator={false}
-            ref={ref => (this.msgView = ref)}>
+            ref={ref => (this.msgView = ref)}
+            onContentSizeChange={(a, b) => {
+              this.msgView.scrollToEnd({animated: true, duration: 1000});
+            }}>
             {this.state.badges.map(badgeProps => (
               <ChatBadge
                 sender={badgeProps.sender}
                 text={badgeProps.msg}
                 received={badgeProps.received}
+                hideSender={badgeProps.hideSender}
               />
-              // <Text>{badgeProps.sender}</Text>
             ))}
           </ScrollView>
         </View>
@@ -118,6 +128,10 @@ export default class ChatBox extends Component {
     );
   }
 }
+
+ChatBox.propTypes = {
+  sender: PropTypes.string,
+};
 
 const style = StyleSheet.create({
   container: {

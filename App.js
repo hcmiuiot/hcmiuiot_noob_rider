@@ -23,6 +23,7 @@ import {
 
 import ChatBox from './components/ChatBox';
 
+import Storage from './services/Storage';
 import Constants from './services/Constants';
 import {requestGeolocationPermission} from './services/Permission';
 import MqttService from './services/MqttService';
@@ -39,11 +40,11 @@ import KeepAwake from 'react-native-keep-awake';
 import Proximity from 'react-native-proximity';
 
 // import LinearGradient from 'react-native-linear-gradient';
-import ChatBadge from './components/ChatBox/ChatBadge';
+// import ChatBadge from './components/ChatBox/ChatBadge';
 
 console.disableYellowBox = true;
 
-const B = props => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>;
+// const B = props => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>;
 
 
 export default class App extends React.Component {
@@ -61,14 +62,38 @@ export default class App extends React.Component {
       isMqttConnected: false,
       isFollowUser: true,
       showConfigScreen: false,
+      bikeName: 'unknown',
+      riderName: 'unknown',
     };
+
+    this.loadConfigAndConnect();
   }
 
-  testMqtt() {
-    this.mqttService = new MqttService();
-    this.mqttService.connect(Constants.URL_MQTT_CONNECTION, () => {
-      this.setState({isMqttConnected: true});
-    });
+  try2SendGps() {
+    if (this.mqttService) {
+      console.log('Trying 2 send GPS');
+      const sendMsg = {
+        user: {bikerName: this.state.bikeName},
+        gps: this.state.myGPS,
+      };
+      this.mqttService.publish(
+        `noob_rider/${this.state.riderName}/gps`,
+        JSON.stringify(sendMsg),
+        0,
+      );
+    }
+  }
+
+  try2SendChat(to, msg) {
+    if (this.mqttService) {
+      console.log('Trying 2 send Chat');
+      const sendMsg = {to, msg};
+      this.mqttService.publish(
+        `noob_rider/${this.state.riderName}/chat`,
+        JSON.stringify(sendMsg),
+        0,
+      );
+    }
   }
 
   centerMap() {
@@ -112,12 +137,7 @@ export default class App extends React.Component {
             },
           });
 
-          if (this.mqttClient && this.mqttClient.connected) {
-            this.mqttClient.publish('/test', JSON.stringify(this.state.myGPS), {
-              qos: 0,
-              retain: true,
-            });
-          }
+          this.try2SendGps();
 
           this.centerMap();
         },
@@ -134,12 +154,26 @@ export default class App extends React.Component {
   };
 
   connect2Mqtt() {
-    this.testMqtt();
+    this.mqttService = new MqttService();
+    this.mqttService.connect(Constants.URL_MQTT_CONNECTION, () => {
+      this.setState({isMqttConnected: true});
+      console.log('MQTT connected successfully!');
+    });
   }
+
 
   componentDidMount() {
     Proximity.addListener(() => this.centerMap());
   }
+
+  loadConfigAndConnect() {
+    Storage.readConfigs(configs => {
+      this.setState({riderName: configs.riderName, bikeName: configs.bikeName});
+      this.connect2Mqtt();
+    });
+  }
+
+  
 
   render() {
     // const chatHeight = this.state.showConfigScreen ? 0 : '40%';
@@ -168,113 +202,18 @@ export default class App extends React.Component {
               image={require('./assets/icons/navigation.png')}
               rotation={this.state.myGPS.heading}
               flat={true}
-              opacity={0.8}
-              title="Your bike"
-              description={'Winner 59G2-29876'}
+              opacity={0.9}
+              title={this.state.riderName}
+              description={this.state.bikeName}
             />
           </MapView>
-         
-
-          {/* <View style={style.switchArea}>
-            <Text style={{bottom: -5}}>Auto-center</Text>
-            <Switch
-              style={style.trackSwitch}
-              value={this.state.isFollowUser}
-              onValueChange={value => this.setState({isFollowUser: value})}
-            />
-          </View> */}
-
-          {/* <View style={style.toolbox}> */}
-          {/* <View style={style.toolView}> */}
-          {/* <View style={style.toolViewLeft}> */}
-          {/* <View style={style.speedView}>
-                  <Text
-                    style={[
-                      style.statusText,
-                      {fontSize: 70, fontWeight: 'bold'},
-                    ]}>
-                    {Math.round(this.state.myGPS.speed)}
-                  </Text>
-                  <Text style={[style.statusText, {fontSize: 22}]}>km/h</Text>
-                </View> */}
-
-          {/*
-                {this.state.isMqttConnected && (
-                  <TouchableOpacity style={style.connectBtnDisabled} disabled>
-                    <Text style={style.connectText}>Connected</Text>
-                  </TouchableOpacity>
-                )}
-                {!this.state.isMqttConnected && (
-                  <TouchableOpacity
-                    style={style.connectBtn}
-                    onPress={() => this.connect2Mqtt()}>
-                    <Text style={style.connectText}>Connect now</Text>
-                  </TouchableOpacity>
-                )} */}
-          {/* </View> */}
-
-          {/* <LinearGradient colors={['#00000000', '#00000000', '#00000000']}> */}
-          {/* {!this.state.showConfigScreen && ( */}
-          <View style={[style.toolbox]}>
-            <ChatBox
-              style={style.chatScrollView}
-              ref={ref => (this.chatBox = ref)}>
-              <ChatBadge
-                sender="Jerry"
-                text="Huê ở đâu a e kéo xuống chơi chung nè"
-                received
-              />
-              <ChatBadge sender="Tuan" text="Giữa rừng nha e" received />
-              <ChatBadge sender="Jerry" text="Chơi mình đi nha!" received />
-              <ChatBadge
-                sender="Tung"
-                text="Mang theo ổ điện nha 😐"
-                received
-              />
-              <ChatBadge sender="Tuan" text="Có vẻ đầy ae hã" received />
-              <ChatBadge
-                sender="Tung"
-                text="ko đông cũng thiếu ổ điện :))"
-                received
-              />
-              <ChatBadge
-                sender="Tung"
-                text="mua bánh mì ăn trưa với :))"
-                received
-                hideSender
-              />
-              <ChatBadge sender="Thuan" text="Nhắn sớm vl" />
-              <ChatBadge sender="Thuan" text="À há" received />
-              <ChatBadge sender="Tung" text="rip :)))" received />
-              <ChatBadge
-                sender="Tung"
-                text="thuê ở bình nguyên luôn"
-                received
-                hideSender
-              />
-            </ChatBox>
-
-            
-
-            {/* <View style={style.chatView}>
-                  <TextInput style={style.chatInput} />
-                  <TouchableOpacity style={style.chatBtn}>
-                    <Icon
-                      name="comment-alt"
-                      color="white"
-                      size={22}
-                      style={this.sendButton}
-                    />
-                  </TouchableOpacity>
-                </View> */}
-          </View>
-
           {this.state.showConfigScreen && (
             <ConfigScreeen
               onGoBack={() => {
                 this.setState({showConfigScreen: false});
               }}
               onSave={() => {
+                this.loadConfigAndConnect();
                 this.setState({showConfigScreen: false});
               }}
             />
@@ -296,10 +235,21 @@ export default class App extends React.Component {
             </View>
           )}
 
-          {/* )} */}
-          {/* </LinearGradient> */}
-          {/* </View> */}
-          {/* </View> */}
+          {/* <View style={style.switchArea}>
+            <Text style={{bottom: -5}}>Auto-center</Text>
+            <Switch
+              style={style.trackSwitch}
+              value={this.state.isFollowUser}
+              onValueChange={value => this.setState({isFollowUser: value})}
+            />
+          </View> */}
+
+          <View style={[style.toolbox, {maxHeight: '40%'}]}>
+            <ChatBox
+              style={style.chatScrollView}
+              ref={ref => (this.chatBox = ref)}
+            />
+          </View>
         </View>
       </View>
     );
