@@ -108,7 +108,7 @@ const style = StyleSheet.create({
     paddingTop: 30,
     height: '100%',
     width: '100%',
-    backgroundColor: '#ffffffee',
+    backgroundColor: '#ffffffbc',
     flexDirection: 'column',
   },
   label: {

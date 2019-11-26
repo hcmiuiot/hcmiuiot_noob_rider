@@ -133,7 +133,7 @@ export default class App extends React.Component {
   componentDidMount() {}
 
   render() {
-    const chatHeight = this.state.showConfigScreen ? 0 : '40%';
+    // const chatHeight = this.state.showConfigScreen ? 0 : '40%';
     return (
       <View style={style.container}>
         <StatusBar
@@ -164,32 +164,7 @@ export default class App extends React.Component {
               description={'Winner 59G2-29876'}
             />
           </MapView>
-          {this.state.showConfigScreen && (
-            <ConfigScreeen
-              onGoBack={() => {
-                this.setState({showConfigScreen: false});
-              }}
-              onSave={() => {
-                this.setState({showConfigScreen: false});
-              }}
-            />
-          )}
-          {!this.state.showConfigScreen && (
-            <View style={style.menuIconView}>
-              <TouchableOpacity
-                style={StyleSheet.absoluteFillObject}
-                onPress={() => {
-                  this.setState({showConfigScreen: true});
-                }}>
-                <Icon
-                  name="bars"
-                  size={30}
-                  color="#11111188"
-                  style={StyleSheet.absoluteFillObject}
-                />
-              </TouchableOpacity>
-            </View>
-          )}
+         
 
           {/* <View style={style.switchArea}>
             <Text style={{bottom: -5}}>Auto-center</Text>
@@ -231,7 +206,7 @@ export default class App extends React.Component {
 
           {/* <LinearGradient colors={['#00000000', '#00000000', '#00000000']}> */}
           {/* {!this.state.showConfigScreen && ( */}
-          <View style={[style.toolbox, {height: chatHeight}]}>
+          <View style={[style.toolbox]}>
             <ChatBox
               style={style.chatScrollView}
               ref={ref => (this.chatBox = ref)}>
@@ -270,6 +245,8 @@ export default class App extends React.Component {
               />
             </ChatBox>
 
+            
+
             {/* <View style={style.chatView}>
                   <TextInput style={style.chatInput} />
                   <TouchableOpacity style={style.chatBtn}>
@@ -282,6 +259,34 @@ export default class App extends React.Component {
                   </TouchableOpacity>
                 </View> */}
           </View>
+
+          {this.state.showConfigScreen && (
+            <ConfigScreeen
+              onGoBack={() => {
+                this.setState({showConfigScreen: false});
+              }}
+              onSave={() => {
+                this.setState({showConfigScreen: false});
+              }}
+            />
+          )}
+          {!this.state.showConfigScreen && (
+            <View style={style.menuIconView}>
+              <TouchableOpacity
+                style={StyleSheet.absoluteFillObject}
+                onPress={() => {
+                  this.setState({showConfigScreen: true});
+                }}>
+                <Icon
+                  name="bars"
+                  size={30}
+                  color="#11111188"
+                  style={StyleSheet.absoluteFillObject}
+                />
+              </TouchableOpacity>
+            </View>
+          )}
+
           {/* )} */}
           {/* </LinearGradient> */}
           {/* </View> */}
