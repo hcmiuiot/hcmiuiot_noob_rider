@@ -113,7 +113,7 @@ export default class App extends React.Component {
             },
           });
 
-          this.try2SendMqtt();
+          this.try2SendGps();
 
           if (this.mapView) {
             if (this.state.isFollowUser) {

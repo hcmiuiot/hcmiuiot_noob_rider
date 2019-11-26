@@ -86,13 +86,21 @@ export default class ConfigScreen extends Component {
         />
         <View style={style.bottomView}>
           <TouchableOpacity
-            style={[style.controlInput, style.button,  {backgroundColor: '#56BA9E55'}]}
+            style={[
+              style.controlInput,
+              style.button,
+              {backgroundColor: '#56BA9E55'},
+            ]}
             onPress={this.onGoBack}>
             <Icon name="angle-double-left" size={18} style={style.btnIcon} />
             <Text style={style.btnText}>Back</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[style.controlInput, style.button, {backgroundColor: '#B4E88188'}]}
+            style={[
+              style.controlInput,
+              style.button,
+              {backgroundColor: '#B4E88188'},
+            ]}
             onPress={this.onSave}>
             <Icon name="link" size={18} style={style.btnIcon} />
             <Text style={style.btnText}>{'Save & Connect'}</Text>
@@ -108,7 +116,7 @@ const style = StyleSheet.create({
     paddingTop: 30,
     height: '100%',
     width: '100%',
-    backgroundColor: '#ffffffee',
+    backgroundColor: '#ffffffbc',
     flexDirection: 'column',
   },
   label: {
