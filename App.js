@@ -37,12 +37,15 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import Geolocation from 'react-native-geolocation-service';
 import KeepAwake from 'react-native-keep-awake';
 
+import Proximity from 'react-native-proximity';
+
 // import LinearGradient from 'react-native-linear-gradient';
 // import ChatBadge from './components/ChatBox/ChatBadge';
 
 console.disableYellowBox = true;
 
 // const B = props => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>;
+
 
 export default class App extends React.Component {
   constructor(props) {
@@ -93,6 +96,27 @@ export default class App extends React.Component {
     }
   }
 
+  centerMap() {
+    if (this.mapView) {
+      if (this.state.isFollowUser) {
+        let camera = {
+          center: this.state.myGPS.coord,
+          pitch: 0,
+          heading: this.state.myGPS.heading,
+          // Only on iOS MapKit, in meters. The property is ignored by Google Maps.
+          altitude: 0,
+          // Only when using Google Maps.
+          // zoom: number
+        };
+        if (this.state.myGPS.speed < 5) {
+          this.mapView.animateToCoordinate(this.state.myGPS.coord, 500);
+        } else {
+          this.mapView.animateCamera(camera, 500);
+        }
+      }
+    }
+  }
+
   onMapReadyEvent = () => {
     if (requestGeolocationPermission()) {
       // console.log('GPS is ready!');
@@ -115,24 +139,7 @@ export default class App extends React.Component {
 
           this.try2SendGps();
 
-          if (this.mapView) {
-            if (this.state.isFollowUser) {
-              let camera = {
-                center: this.state.myGPS.coord,
-                pitch: 0,
-                heading: this.state.myGPS.heading,
-                // Only on iOS MapKit, in meters. The property is ignored by Google Maps.
-                altitude: 0,
-                // Only when using Google Maps.
-                // zoom: number
-              };
-              if (this.state.myGPS.speed < 5) {
-                this.mapView.animateToCoordinate(this.state.myGPS.coord, 500);
-              } else {
-                this.mapView.animateCamera(camera, 500);
-              }
-            }
-          }
+          this.centerMap();
         },
         error => {},
         {
@@ -154,12 +161,19 @@ export default class App extends React.Component {
     });
   }
 
+
+  componentDidMount() {
+    Proximity.addListener(() => this.centerMap());
+  }
+
   loadConfigAndConnect() {
     Storage.readConfigs(configs => {
       this.setState({riderName: configs.riderName, bikeName: configs.bikeName});
       this.connect2Mqtt();
     });
   }
+
+  
 
   render() {
     // const chatHeight = this.state.showConfigScreen ? 0 : '40%';
@@ -179,7 +193,7 @@ export default class App extends React.Component {
               latitudeDelta: 0.0,
               longitudeDelta: 0.0,
             }}
-            ref={ref => (this.mapView = ref)}
+            ref={ref => {this.mapView = ref}}
             onMapReady={this.onMapReadyEvent}
             loadingEnabled={true}
             showsCompass={false}>
