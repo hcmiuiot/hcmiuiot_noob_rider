@@ -152,6 +152,7 @@ export default class App extends React.Component {
           this.mapView.animateCamera(camera, 500);
         }
       }
+      // this.mapView.fitToElements(true);
     }
   }
 
@@ -254,7 +255,7 @@ export default class App extends React.Component {
                 teammate.name !== this.state.riderName && (
                   <Marker
                     coordinate={teammate.info.gps.coord}
-                    image={require('./assets/icons/navigation.png')}
+                    image={require('./assets/icons/navigation2.png')}
                     rotation={teammate.info.gps.heading}
                     flat={true}
                     opacity={0.9}
