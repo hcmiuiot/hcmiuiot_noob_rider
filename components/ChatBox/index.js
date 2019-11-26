@@ -10,35 +10,110 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
+import EmojiSelector from 'react-native-emoji-selector';
+
 import ChatBadge from './ChatBadge';
 
+import Sound from '../../services/Sound';
+
 export default class ChatBox extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {isShowingEmojiSeletor: false, chatText: '', badges: []};
+  }
+
+  appendToChatText(content) {
+    this.setState({chatText: this.state.chatText + content});
+  }
+
+  addNewChatBadge(sender, msg, received = true) {
+    const newBadgeProps = {sender, msg, received};
+    this.setState({badges: [...this.state.badges, newBadgeProps]});
+    Sound.play(Sound.SAX_ROLL);
+  }
+
+  onSendMsg() {
+    this.addNewChatBadge('sender', 'Hello World');
+  }
+
+  componentDidUpdate() {
+    this.msgView.scrollToEnd({animated: true, duration: 100});
+  }
+
   render() {
     return (
       <View style={style.container}>
         <View style={style.msgView}>
-          <ScrollView>{this.props.children}</ScrollView>
+          <ScrollView
+            showsHorizontalScrollIndicator={false}
+            ref={ref => (this.msgView = ref)}>
+            {this.state.badges.map(badgeProps => (
+              <ChatBadge
+                sender={badgeProps.sender}
+                text={badgeProps.msg}
+                received={badgeProps.received}
+              />
+              // <Text>{badgeProps.sender}</Text>
+            ))}
+          </ScrollView>
         </View>
-        <View style={style.chatView}>
-          <TextInput style={style.chatInput} placeholder="Aa" />
-          <Icon
-            name="smile"
-            solid
-            size={20}
-            color="#998BBADD"
-            style={style.emotionIcon}
+        <View
+          style={[
+            style.chatView,
+            {paddingLeft: this.state.isShowingEmojiSeletor ? 10 : 65},
+          ]}>
+          <TouchableOpacity style={style.fastMsgTouch}>
+            <Icon
+              name="comment-dots"
+              solid
+              size={25}
+              color="#6E5BFFEE"
+              style={style.fastMsgIcon}
+            />
+          </TouchableOpacity>
+          <TextInput
+            style={style.chatInput}
+            placeholder="Aa"
+            onChangeText={chatText => this.setState({chatText})}
+            onFocus={() => this.setState({isShowingEmojiSeletor: false})}
+            value={this.state.chatText}
           />
-          <TouchableOpacity style={style.sendBtn}>
+          <TouchableOpacity
+            style={style.emotionIcon}
+            onPress={() => this.setState({isShowingEmojiSeletor: true})}>
+            <Icon
+              name="smile"
+              solid
+              size={20}
+              color="#6E5BFFDD"
+              // style={Style}
+              ref={ref => (this.chatInput = ref)}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={style.sendBtn}
+            onPress={() => this.onSendMsg()}>
             <Icon
               name="paper-plane"
               solid
-              size={30}
-              color="#00BEBC"
+              size={25}
+              color="#6E5BFF"
               style={style.sendBtnIcon}
             />
           </TouchableOpacity>
-          {/* <TextInput style={style.sendBtn} /> */}
         </View>
+        {this.state.isShowingEmojiSeletor && (
+          <EmojiSelector
+            onEmojiSelected={emoji => {
+              this.appendToChatText(emoji);
+              // this.setState({isShowingEmojiSeletor: false});
+              // this.chatInput.wrappedInstance.focus();
+            }}
+            theme="white"
+            showSearchBar={false}
+            style={style.emojiSelector}
+          />
+        )}
       </View>
     );
   }
@@ -53,6 +128,7 @@ const style = StyleSheet.create({
   },
   msgView: {
     flex: 5,
+    // backgroundColor: 'red',
   },
   chatView: {
     height: 45,
@@ -77,12 +153,17 @@ const style = StyleSheet.create({
     margin: 5,
     color: 'black',
     paddingHorizontal: 15,
+    paddingRight: 35,
     paddingBottom: 8,
   },
   emotionIcon: {
     position: 'absolute',
     alignSelf: 'center',
-    right: 72,
+    width: 45,
+    height: 45,
+    right: 59,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   sendBtn: {
     height: 45,
@@ -96,4 +177,17 @@ const style = StyleSheet.create({
     // backgroundColor: 'blue',
     // size: 30,
   },
+  emojiSelector: {
+    height: 300,
+    // position: 'absolute',
+    // width:
+  },
+  fastMsgTouch: {
+    alignSelf: 'center',
+    width: 45,
+    height: 45,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fastMsgIcon: {},
 });

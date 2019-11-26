@@ -12,13 +12,13 @@
 import React from 'react';
 import {
   StyleSheet,
-  ScrollView,
+  // ScrollView,
   View,
   StatusBar,
   Text,
-  TextInput,
+  // TextInput,
   TouchableOpacity,
-  Switch,
+  // Switch,
 } from 'react-native';
 
 import ChatBox from './components/ChatBox';
@@ -36,7 +36,7 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import Geolocation from 'react-native-geolocation-service';
 import KeepAwake from 'react-native-keep-awake';
 
-import LinearGradient from 'react-native-linear-gradient';
+// import LinearGradient from 'react-native-linear-gradient';
 import ChatBadge from './components/ChatBox/ChatBadge';
 
 console.disableYellowBox = true;
@@ -70,7 +70,7 @@ export default class App extends React.Component {
 
   onMapReadyEvent = () => {
     if (requestGeolocationPermission()) {
-      console.log('GPS is ready!');
+      // console.log('GPS is ready!');
       Geolocation.watchPosition(
         position => {
           // console.log(position);
@@ -133,6 +133,7 @@ export default class App extends React.Component {
   componentDidMount() {}
 
   render() {
+    const chatHeight = this.state.showConfigScreen ? 0 : '40%';
     return (
       <View style={style.container}>
         <StatusBar
@@ -177,7 +178,9 @@ export default class App extends React.Component {
             <View style={style.menuIconView}>
               <TouchableOpacity
                 style={StyleSheet.absoluteFillObject}
-                onPress={() => this.setState({showConfigScreen: true})}>
+                onPress={() => {
+                  this.setState({showConfigScreen: true});
+                }}>
                 <Icon
                   name="bars"
                   size={30}
@@ -227,45 +230,47 @@ export default class App extends React.Component {
           {/* </View> */}
 
           {/* <LinearGradient colors={['#00000000', '#00000000', '#00000000']}> */}
-          {!this.state.showConfigScreen && (
-            <View style={[style.toolbox]}>
-              <ChatBox style={style.chatScrollView}>
-                <ChatBadge
-                  sender="Jerry"
-                  text="Huê ở đâu a e kéo xuống chơi chung nè"
-                  received
-                />
-                <ChatBadge sender="Tuan" text="Giữa rừng nha e" received />
-                <ChatBadge sender="Jerry" text="Chơi mình đi nha!" received />
-                <ChatBadge
-                  sender="Tung"
-                  text="Mang theo ổ điện nha 😐"
-                  received
-                />
-                <ChatBadge sender="Tuan" text="Có vẻ đầy ae hã" received />
-                <ChatBadge
-                  sender="Tung"
-                  text="ko đông cũng thiếu ổ điện :))"
-                  received
-                />
-                <ChatBadge
-                  sender="Tung"
-                  text="mua bánh mì ăn trưa với :))"
-                  received
-                  hideSender
-                />
-                <ChatBadge sender="Thuan" text="Nhắn sớm vl" />
-                <ChatBadge sender="Thuan" text="À há" received />
-                <ChatBadge sender="Tung" text="rip :)))" received />
-                <ChatBadge
-                  sender="Tung"
-                  text="thuê ở bình nguyên luôn"
-                  received
-                  hideSender
-                />
-              </ChatBox>
+          {/* {!this.state.showConfigScreen && ( */}
+          <View style={[style.toolbox, {height: chatHeight}]}>
+            <ChatBox
+              style={style.chatScrollView}
+              ref={ref => (this.chatBox = ref)}>
+              <ChatBadge
+                sender="Jerry"
+                text="Huê ở đâu a e kéo xuống chơi chung nè"
+                received
+              />
+              <ChatBadge sender="Tuan" text="Giữa rừng nha e" received />
+              <ChatBadge sender="Jerry" text="Chơi mình đi nha!" received />
+              <ChatBadge
+                sender="Tung"
+                text="Mang theo ổ điện nha 😐"
+                received
+              />
+              <ChatBadge sender="Tuan" text="Có vẻ đầy ae hã" received />
+              <ChatBadge
+                sender="Tung"
+                text="ko đông cũng thiếu ổ điện :))"
+                received
+              />
+              <ChatBadge
+                sender="Tung"
+                text="mua bánh mì ăn trưa với :))"
+                received
+                hideSender
+              />
+              <ChatBadge sender="Thuan" text="Nhắn sớm vl" />
+              <ChatBadge sender="Thuan" text="À há" received />
+              <ChatBadge sender="Tung" text="rip :)))" received />
+              <ChatBadge
+                sender="Tung"
+                text="thuê ở bình nguyên luôn"
+                received
+                hideSender
+              />
+            </ChatBox>
 
-              {/* <View style={style.chatView}>
+            {/* <View style={style.chatView}>
                   <TextInput style={style.chatInput} />
                   <TouchableOpacity style={style.chatBtn}>
                     <Icon
@@ -276,8 +281,8 @@ export default class App extends React.Component {
                     />
                   </TouchableOpacity>
                 </View> */}
-            </View>
-          )}
+          </View>
+          {/* )} */}
           {/* </LinearGradient> */}
           {/* </View> */}
           {/* </View> */}

@@ -35,7 +35,7 @@ export default class ChatBadge extends Component {
               {
                 backgroundColor: this.props.received
                   ? '#DBDADAAA'
-                  : '#998BBADD',
+                  : '#6E5BFFDD',
               },
             ]}>
             <Text
@@ -55,7 +55,7 @@ export default class ChatBadge extends Component {
 const style = StyleSheet.create({
   container: {
     right: 0,
-    // backgroundColor: 'yellow',
+    // backgroundColor: 'blue',
     marginBottom: 1,
     alignContent: 'flex-end',
     paddingHorizontal: 10,
