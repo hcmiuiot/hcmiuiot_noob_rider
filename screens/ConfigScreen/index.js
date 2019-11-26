@@ -13,7 +13,7 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 
 import Storage from '../../services/Storage';
 
-export default class ConfigScreeeen extends Component {
+export default class ConfigScreeen extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -105,9 +105,10 @@ export default class ConfigScreeeen extends Component {
 
 const style = StyleSheet.create({
   container: {
-    // height: '100%',
+    paddingTop: 30,
+    height: '100%',
     width: '100%',
-    backgroundColor: '#8789C000',
+    backgroundColor: '#ffffffee',
     flexDirection: 'column',
   },
   label: {
