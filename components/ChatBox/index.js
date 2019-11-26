@@ -9,13 +9,12 @@ import {
   TextInput,
   TouchableOpacity,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome5';
 
+import Icon from 'react-native-vector-icons/FontAwesome5';
 import EmojiSelector from 'react-native-emoji-selector';
 
-import ChatBadge from './ChatBadge';
-
 import Sound from '../../services/Sound';
+import ChatBadge from './ChatBadge';
 
 export default class ChatBox extends Component {
   constructor(props) {
@@ -30,16 +29,22 @@ export default class ChatBox extends Component {
   addNewChatBadge(sender, msg, received = true) {
     const lastSender = this.state.badges[this.state.badges.length - 1] || null;
     let hideSender = lastSender && lastSender.sender === sender;
-    const newBadgeProps = {sender, msg, received, hideSender};
-    this.setState({badges: [...this.state.badges, newBadgeProps]});
-    Sound.play(Sound.QUACK);
+    // let msgTrimmed = msg.trim();
+    if (sender && msg.trim() && msg !== '') {
+      const newBadgeProps = {sender, msg, received, hideSender};
+      this.setState({badges: [...this.state.badges, newBadgeProps]});
+      Sound.play(Sound.QUACK);
+    }
   }
 
   onSendMsg() {
-    let msg2Send = this.state.chatText;
-    if (this.props.sender && msg2Send) {
+    let msg2Send = this.state.chatText.trim();
+    if (msg2Send && msg2Send !== '') {
       this.setState({chatText: ''});
-      this.addNewChatBadge(this.props.sender, msg2Send);
+      if (this.props.onSend) {
+        this.props.onSend(msg2Send);
+      }
+      // this.addNewChatBadge(this.props.sender, msg2Send);
     }
   }
 
@@ -54,7 +59,7 @@ export default class ChatBox extends Component {
           <ScrollView
             showsHorizontalScrollIndicator={false}
             ref={ref => (this.msgView = ref)}
-            onContentSizeChange={(a, b) => {
+            onContentSizeChange={() => {
               this.msgView.scrollToEnd({animated: true, duration: 1000});
             }}>
             {this.state.badges.map(badgeProps => (
@@ -131,6 +136,7 @@ export default class ChatBox extends Component {
 
 ChatBox.propTypes = {
   sender: PropTypes.string,
+  onSend: PropTypes.func,
 };
 
 const style = StyleSheet.create({
@@ -161,8 +167,8 @@ const style = StyleSheet.create({
     // textAlign: 'auto',
     // backgroundColor: 'white',
     borderRadius: 30,
-    borderColor: '#DBDADAAA',
-    backgroundColor: '#DBDADAAA',
+    borderColor: '#DBDADADD',
+    backgroundColor: '#DBDADADD',
     borderWidth: 2,
     margin: 5,
     color: 'black',

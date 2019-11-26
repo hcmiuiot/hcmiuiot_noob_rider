@@ -11,33 +11,24 @@
 
 import React from 'react';
 import {
-  StyleSheet,
-  // ScrollView,
-  View,
   StatusBar,
-  Text,
+  StyleSheet,
   // TextInput,
   TouchableOpacity,
-  // Switch,
+  // ScrollView,
+  View,
 } from 'react-native';
-
-import ChatBox from './components/ChatBox';
-
-import Storage from './services/Storage';
-import Constants from './services/Constants';
-import {requestGeolocationPermission} from './services/Permission';
-import MqttService from './services/MqttService';
-
-import MapView, {Marker} from 'react-native-maps';
-
-import ConfigScreeen from './screens/ConfigScreen';
-
-import Icon from 'react-native-vector-icons/FontAwesome5';
-
 import Geolocation from 'react-native-geolocation-service';
 import KeepAwake from 'react-native-keep-awake';
-
+import MapView, {Marker} from 'react-native-maps';
 import Proximity from 'react-native-proximity';
+import Icon from 'react-native-vector-icons/FontAwesome5';
+import ChatBox from './components/ChatBox';
+import ConfigScreeen from './screens/ConfigScreen';
+import Constants from './services/Constants';
+import MqttService from './services/MqttService';
+import {requestGeolocationPermission} from './services/Permission';
+import Storage from './services/Storage';
 
 // import LinearGradient from 'react-native-linear-gradient';
 // import ChatBadge from './components/ChatBox/ChatBadge';
@@ -45,7 +36,6 @@ import Proximity from 'react-native-proximity';
 console.disableYellowBox = true;
 
 // const B = props => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>;
-
 
 export default class App extends React.Component {
   constructor(props) {
@@ -64,22 +54,64 @@ export default class App extends React.Component {
       showConfigScreen: false,
       bikeName: 'unknown',
       riderName: 'unknown',
+      teammates: [],
     };
 
     this.loadConfigAndConnect();
   }
 
+  updateTeammatesInfo(riderName, info) {
+    let foundIdx = this.state.teammates.findIndex(
+      obj => obj.name === riderName,
+    );
+    if (foundIdx === -1) {
+      console.log('Go to add new!');
+      this.setState({
+        teammates: [...this.state.teammates, {name: riderName, info}],
+      });
+    } else {
+      let updateTeammates = [...this.state.teammates];
+      updateTeammates[foundIdx] = {name: riderName, info};
+      this.setState({teammates: updateTeammates});
+    }
+    // console.log(this.state.teammates);
+  }
+
+  handleIncomingMqtt = (topic, msg, packet) => {
+    const topicSegs = topic.split('/');
+    const incomingMsg = JSON.parse(msg.toString());
+    let sender = topicSegs[1];
+    let type = topicSegs[2];
+    let isMyMsg = sender === this.state.riderName;
+
+    // console.log(packet);
+
+    switch (type) {
+      case 'gps': {
+        console.log('[GPS]', topic, incomingMsg);
+        this.updateTeammatesInfo(sender, incomingMsg);
+        break;
+      }
+      case 'chat': {
+        console.log('[CHAT]', topic, incomingMsg);
+        if (this.chatBox) {
+          this.chatBox.addNewChatBadge(sender, incomingMsg.msg, !isMyMsg);
+        }
+      }
+    }
+  };
+
   try2SendGps() {
     if (this.mqttService) {
       console.log('Trying 2 send GPS');
       const sendMsg = {
-        user: {bikerName: this.state.bikeName},
+        user: {bikeName: this.state.bikeName},
         gps: this.state.myGPS,
       };
       this.mqttService.publish(
         `noob_rider/${this.state.riderName}/gps`,
         JSON.stringify(sendMsg),
-        0,
+        {qos: 0, retain: true, properties: {messageExpiryInterval: 5}},
       );
     }
   }
@@ -91,10 +123,16 @@ export default class App extends React.Component {
       this.mqttService.publish(
         `noob_rider/${this.state.riderName}/chat`,
         JSON.stringify(sendMsg),
-        0,
+        {qos: 1, retain: true, properties: {messageExpiryInterval: 5}},
       );
     }
   }
+
+  onChatSend = msg => {
+    if (this.state.riderName) {
+      this.try2SendChat('', msg);
+    }
+  };
 
   centerMap() {
     if (this.mapView) {
@@ -138,7 +176,6 @@ export default class App extends React.Component {
           });
 
           this.try2SendGps();
-
           this.centerMap();
         },
         error => {},
@@ -158,9 +195,14 @@ export default class App extends React.Component {
     this.mqttService.connect(Constants.URL_MQTT_CONNECTION, () => {
       this.setState({isMqttConnected: true});
       console.log('MQTT connected successfully!');
+      this.mqttService.subscribe('noob_rider/+/+', {qos: 1}, err => {
+        if (!err) {
+          console.log('Subscribe MQTT okay!');
+          this.mqttService.registerCallback('message', this.handleIncomingMqtt);
+        }
+      });
     });
   }
-
 
   componentDidMount() {
     Proximity.addListener(() => this.centerMap());
@@ -172,8 +214,6 @@ export default class App extends React.Component {
       this.connect2Mqtt();
     });
   }
-
-  
 
   render() {
     // const chatHeight = this.state.showConfigScreen ? 0 : '40%';
@@ -193,7 +233,9 @@ export default class App extends React.Component {
               latitudeDelta: 0.0,
               longitudeDelta: 0.0,
             }}
-            ref={ref => {this.mapView = ref}}
+            ref={ref => {
+              this.mapView = ref;
+            }}
             onMapReady={this.onMapReadyEvent}
             loadingEnabled={true}
             showsCompass={false}>
@@ -206,15 +248,31 @@ export default class App extends React.Component {
               title={this.state.riderName}
               description={this.state.bikeName}
             />
+
+            {this.state.teammates.map(
+              teammate =>
+                teammate.name !== this.state.riderName && (
+                  <Marker
+                    coordinate={teammate.info.gps.coord}
+                    image={require('./assets/icons/navigation.png')}
+                    rotation={teammate.info.gps.heading}
+                    flat={true}
+                    opacity={0.9}
+                    title={teammate.name}
+                    description={teammate.info.user.bikeName}
+                  />
+                ),
+            )}
           </MapView>
-		  
-		  <View style={[style.toolbox, {maxHeight: '40%'}]}>
+
+          <View style={[style.toolbox]}>
             <ChatBox
-              style={style.chatScrollView}
+              // style={style.chatScrollView}
               ref={ref => (this.chatBox = ref)}
+              onSend={this.onChatSend}
             />
           </View>
-		  
+
           {this.state.showConfigScreen && (
             <ConfigScreeen
               onGoBack={() => {
@@ -267,7 +325,8 @@ const style = StyleSheet.create({
   toolbox: {
     position: 'absolute',
     width: '100%',
-    height: '40%',
+    height: '35%',
+    // maxHeight: '35%',
     // marginBottom: 0,
     // backgroundColor: 'yellow',
     justifyContent: 'center',

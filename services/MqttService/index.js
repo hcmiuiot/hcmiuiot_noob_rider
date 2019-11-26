@@ -10,17 +10,14 @@ export default class MqttService {
     this.mqttClient.on('connect', onConnect);
   }
 
-  publish(topic, msg, qos = 0) {
+  publish(topic, msg, _options = {}) {
     if (this.mqttClient && this.mqttClient.connected) {
-      this.mqttClient.publish(topic, msg, {
-        qos,
-        retain: true,
-      });
+      this.mqttClient.publish(topic, msg, _options);
     }
   }
 
-  subscribe(topic, callback) {
-    this.mqttClient.subscribe(topic, callback);
+  subscribe(topic, options = {}, callback) {
+    this.mqttClient.subscribe(topic, options, callback);
   }
 
   disconnect(onDisconnect) {
