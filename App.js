@@ -207,6 +207,14 @@ export default class App extends React.Component {
               description={this.state.bikeName}
             />
           </MapView>
+		  
+		  <View style={[style.toolbox, {maxHeight: '40%'}]}>
+            <ChatBox
+              style={style.chatScrollView}
+              ref={ref => (this.chatBox = ref)}
+            />
+          </View>
+		  
           {this.state.showConfigScreen && (
             <ConfigScreeen
               onGoBack={() => {
@@ -243,13 +251,6 @@ export default class App extends React.Component {
               onValueChange={value => this.setState({isFollowUser: value})}
             />
           </View> */}
-
-          <View style={[style.toolbox, {maxHeight: '40%'}]}>
-            <ChatBox
-              style={style.chatScrollView}
-              ref={ref => (this.chatBox = ref)}
-            />
-          </View>
         </View>
       </View>
     );
