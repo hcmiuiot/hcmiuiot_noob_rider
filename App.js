@@ -17,6 +17,7 @@ import {
   TouchableOpacity,
   // ScrollView,
   View,
+  Text,
 } from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 import KeepAwake from 'react-native-keep-awake';
@@ -260,8 +261,11 @@ export default class App extends React.Component {
                     flat={true}
                     opacity={0.9}
                     title={teammate.name}
-                    description={teammate.info.user.bikeName}
-                  />
+                    description={teammate.info.user.bikeName}>
+                    {/* <View style={{backgroundColor: 'red', padding: 10}}>
+                      <Text>{teammate.name}</Text>
+                    </View> */}
+                  </Marker>
                 ),
             )}
           </MapView>
