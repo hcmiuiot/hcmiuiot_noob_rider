@@ -22,7 +22,7 @@ import {
 import Geolocation from 'react-native-geolocation-service';
 import KeepAwake from 'react-native-keep-awake';
 import MapView, {Marker} from 'react-native-maps';
-import Proximity from 'react-native-proximity';
+// import Proximity from 'react-native-proximity';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import ChatBox from './components/ChatBox';
 import ConfigScreeen from './screens/ConfigScreen';
@@ -207,7 +207,7 @@ export default class App extends React.Component {
   }
 
   componentDidMount() {
-    Proximity.addListener(() => this.centerMap());
+    // Proximity.addListener(() => this.centerMap());
   }
 
   loadConfigAndConnect() {
