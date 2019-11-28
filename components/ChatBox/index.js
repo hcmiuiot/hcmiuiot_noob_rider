@@ -26,12 +26,11 @@ export default class ChatBox extends Component {
     this.setState({chatText: this.state.chatText + content});
   }
 
-  addNewChatBadge(sender, msg, received = true) {
+  addNewChatBadge(sender, msg, received = true, timestamp = null) {
     const lastSender = this.state.badges[this.state.badges.length - 1] || null;
     let hideSender = lastSender && lastSender.sender === sender;
-    // let msgTrimmed = msg.trim();
     if (sender && msg.trim() && msg !== '') {
-      const newBadgeProps = {sender, msg, received, hideSender};
+      const newBadgeProps = {sender, msg, received, hideSender, timestamp};
       this.setState({badges: [...this.state.badges, newBadgeProps]});
       Sound.play(Sound.QUACK);
     }
@@ -68,6 +67,7 @@ export default class ChatBox extends Component {
                 text={badgeProps.msg}
                 received={badgeProps.received}
                 hideSender={badgeProps.hideSender}
+                timestamp={badgeProps.timestamp}
               />
             ))}
           </ScrollView>

@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import moment from 'moment';
 
 import {StyleSheet, View, Text} from 'react-native';
 
@@ -16,7 +17,14 @@ export default class ChatBadge extends Component {
               style.senderView,
               {justifyContent: this.props.received ? 'flex-start' : 'flex-end'},
             ]}>
-            <Text style={style.senderText}>{this.props.sender} said</Text>
+            {!this.props.timestamp && (
+              <Text style={style.senderText}>{this.props.sender} said</Text>
+            )}
+            {this.props.timestamp && (
+              <Text style={style.senderText}>
+                {this.props.sender} ({moment(this.props.timestamp).fromNow()})
+              </Text>
+            )}
           </View>
         )}
 
