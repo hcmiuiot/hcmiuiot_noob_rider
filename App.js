@@ -166,7 +166,7 @@ export default class App extends React.Component {
   };
 
   try2SendGps() {
-    if (this.mqttService.isConnected()) {
+    if (this.mqttService && this.mqttService.isConnected()) {
       console.log('Trying 2 send GPS');
       // const sendMsg = {
       //   user: {bikeName: this.state.bikeName},
@@ -185,7 +185,7 @@ export default class App extends React.Component {
   }
 
   try2SendChat(from, msg) {
-    if (this.mqttService.isConnected()) {
+    if (this.mqttService && this.mqttService.isConnected()) {
       console.log('Trying 2 send Chat');
       const sendMsg = {timestamp: Date.now(), from, msg};
       this.mqttService.publish(
@@ -263,8 +263,10 @@ export default class App extends React.Component {
   };
 
   connect2Mqtt() {
+    // alert('connect2Mqtt');
     this.mqttService = new MqttService();
     this.mqttService.connect(Constants.URL_MQTT_CONNECTION, () => {
+      // if (err) alert(err);
       this.setState({isMqttConnected: true});
 
       this.mqttService.registerCallback('offline', () =>
@@ -335,6 +337,7 @@ export default class App extends React.Component {
       this.setState({
         user: {riderName: configs.riderName, bikeName: configs.bikeName},
       });
+      // alert('Ohyeah');
       this.connect2Mqtt();
     });
   }
