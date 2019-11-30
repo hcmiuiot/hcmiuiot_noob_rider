@@ -479,12 +479,9 @@ const style = StyleSheet.create({
     position: 'absolute',
     width: '100%',
     height: '35%',
-    // maxHeight: '35%',
-    // marginBottom: 0,
-    // backgroundColor: 'yellow',
+    backgroundColor: '#ffffff00',
     justifyContent: 'center',
     bottom: 0,
-    // opacity: 0.85,
   },
   toolView: {
     width: '100%',
