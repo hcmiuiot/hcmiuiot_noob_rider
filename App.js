@@ -94,15 +94,22 @@ export default class App extends React.Component {
     });
   }
 
+  _removeInactivityUsers = () => {
+    this.setState({
+      teammates: this.state.teammates.filter(teammate => {
+        Date.now() - teammate.lastPingTime <= Constants.MAX_AGE;
+      }),
+    });
+    console.log('Filtering inactivity users');
+  }
+
   installRemoveInactivityUsersTimer() {
-    setInterval(() => {
-      this.setState({
-        teammates: this.state.teammates.filter(teammate => {
-          Date.now() - teammate.lastPingTime <= Constants.MAX_AGE;
-        }),
-      });
-      console.log('Filtering inactivity users');
-    }, Constants.INTERVAL_CHECK_MAX_AGE);
+    if (!this.removeTimer) {
+      this.removeTimer = setInterval(
+        this._removeInactivityUsers,
+        Constants.INTERVAL_CHECK_MAX_AGE,
+      );
+    }
   }
 
   handlePing(phoneId, msg) {
@@ -265,8 +272,15 @@ export default class App extends React.Component {
   connect2Mqtt() {
     // alert('connect2Mqtt');
     this.mqttService = new MqttService();
+
     this.mqttService.connect(Constants.URL_MQTT_CONNECTION, () => {
-      // if (err) alert(err);
+      // if (err) {
+      //   console.error('connect2Mqtt()', err);
+      // }
+      this.mqttService.registerCallback('error', err => {
+        console.log('MQTT Error', err);
+      });
+
       this.setState({isMqttConnected: true});
 
       this.mqttService.registerCallback('offline', () =>

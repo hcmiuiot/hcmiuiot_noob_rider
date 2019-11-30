@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import moment from 'moment';
 
-import {StyleSheet, View, Text} from 'react-native';
+import {StyleSheet, View, Text, Image} from 'react-native';
 
 export default class ChatBadge extends Component {
   constructor(props) {
@@ -9,6 +9,22 @@ export default class ChatBadge extends Component {
   }
 
   render() {
+    const avatar = (
+      <View style={style.avatarView}>
+        <Image
+          style={style.avatarImg}
+          source={
+            this.props.hideSender
+              ? {}
+              : {
+                  uri:
+                    'https://i.ibb.co/9cKRzHd/74180087-2500977543350959-4332447010280964096-o.jpg',
+                }
+          }
+        />
+      </View>
+    );
+
     return (
       <View style={style.container}>
         {!this.props.hideSender && (
@@ -28,15 +44,12 @@ export default class ChatBadge extends Component {
           </View>
         )}
 
-        {/* <Text style={style.msgText}>
-          <Text>Hello World</Text>
-        </Text> */}
-
         <View
           style={[
             style.msgView,
             {justifyContent: this.props.received ? 'flex-start' : 'flex-end'},
           ]}>
+          {this.props.received && avatar}
           <View
             style={[
               style.textView,
@@ -54,6 +67,7 @@ export default class ChatBadge extends Component {
               {this.props.text}
             </Text>
           </View>
+          {!this.props.received && avatar}
         </View>
       </View>
     );
@@ -81,7 +95,8 @@ const style = StyleSheet.create({
   },
   msgView: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   msgText: {
     color: 'white',
@@ -96,5 +111,13 @@ const style = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 10,
     backgroundColor: '#494974EE',
+  },
+  avatarView: {
+    margin: 5,
+  },
+  avatarImg: {
+    height: 30,
+    width: 30,
+    borderRadius: 15,
   },
 });
