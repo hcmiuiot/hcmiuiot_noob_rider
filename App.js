@@ -35,6 +35,7 @@ import Constants from './services/Constants';
 import MqttService from './services/MqttService';
 import {requestGeolocationPermission} from './services/Permission';
 import Storage from './services/Storage';
+import ToolBox from './components/ToolBox';
 
 // import LinearGradient from 'react-native-linear-gradient';
 // import ChatBadge from './components/ChatBox/ChatBadge';
@@ -67,8 +68,6 @@ export default class App extends React.Component {
 
     console.log('Phone ID:', this.state.phoneId);
     this.loadConfigAndConnect();
-
-    // this.installRemoveInactivityUsersTimer();
   }
 
   findTeammateIndexByPhoneId(phoneId) {
@@ -83,81 +82,32 @@ export default class App extends React.Component {
     });
   }
 
-  _removeInactivityUsers = () => {
-    this.setState({
-      teammates: this.state.teammates.filter(teammate => {
-        let age = Date.now() - teammate.lastPingTime;
-        // console.log(teammate.user.riderName, age);
-        return age <= Constants.MAX_AGE;
-      }),
-    });
-    // console.log('Filtering inactivity users');
-    console.log(JSON.stringify(this.state.teammates, null, 2));
-  };
+  handleGps(phoneId, msg) {
+    if (msg.timestamp && Date.now() - msg.timestamp <= Constants.MAX_AGE) {
+      let foundIdx = this.findTeammateIndexByPhoneId(phoneId);
+      let newGpsPacket = {phoneId, ...msg};
+      if (foundIdx === -1) {
+        this.setState({
+          teammates: update(this.state.teammates, {$push: [newGpsPacket]}),
+        });
+      } else {
+        this.setState({
+          teammates: update(this.state.teammates, {
+            [foundIdx]: {$set: newGpsPacket},
+          }),
+        });
+      }
 
-  installRemoveInactivityUsersTimer() {
-    if (!this.removeTimer) {
-      this.removeTimer = setInterval(
-        this._removeInactivityUsers,
-        Constants.INTERVAL_CHECK_MAX_AGE,
+      this.setState({
+        teammates: this.state.teammates.filter(teammate => {
+          return Date.now() - teammate.timestamp <= Constants.MAX_AGE;
+        }),
+      });
+      console.log(
+        'this.state.teammates',
+        JSON.stringify(this.state.teammates, null, 2),
       );
     }
-  }
-
-  handlePing(phoneId, msg) {
-    // this._removeInactivityUsers();
-    let foundIdx = this.findTeammateIndexByPhoneId(phoneId);
-    let newTeammate = {
-      phoneId: phoneId,
-      lastPingTime: msg.timestamp,
-      user: msg.user,
-    };
-    if (foundIdx === -1) {
-      // not exist
-      this.setState({
-        teammates: update(this.state.teammates, {$push: [newTeammate]}),
-      });
-    } else {
-      // let foundTeammate = {...this.state.teammates[foundIdx]};
-      // foundTeammate.lastPingTime = newTeammate.lastPingTime;
-      // foundTeammate.user = newTeammate.user;
-      this.setState({
-        // if exist then update
-        teammates: update(this.state.teammates, {
-          [foundIdx]: {
-            lastPingTime: {$set: newTeammate.lastPingTime},
-            user: {$set: newTeammate.user},
-          },
-        }),
-      });
-    }
-    // console.log(
-    //   'this.state.teammates',
-    //   JSON.stringify(this.state.teammates, null, 2),
-    // );
-  }
-
-  handleGps(phoneId, msg) {
-    let foundIdx = this.findTeammateIndexByPhoneId(phoneId);
-    // let newGps = {
-    //   phoneId: phoneId,
-    //   gps: msg,
-    // };
-    if (foundIdx !== -1) {
-      // let foundTeammate = {...this.state.teammates[foundIdx]};
-      // foundTeammate.gps = msg;
-      // this.setState({})
-      this.setState({
-        // if exist then update
-        teammates: update(this.state.teammates, {
-          [foundIdx]: {gps: {$set: msg}},
-        }),
-      });
-    }
-    // console.log(
-    //   'this.state.teammates',
-    //   JSON.stringify(this.state.teammates, null, 2),
-    // );
   }
 
   handleChat(phoneId, msg) {
@@ -176,11 +126,6 @@ export default class App extends React.Component {
     let phoneId = topicSegs[2];
 
     switch (type) {
-      case 'ping': {
-        // console.log('[PING]', topic, incomingMsg);
-        this.handlePing(phoneId, incomingMsg);
-        break;
-      }
       case 'gps': {
         // console.log('[GPS]', topic, incomingMsg);
         this.handleGps(phoneId, incomingMsg);
@@ -196,16 +141,16 @@ export default class App extends React.Component {
 
   try2SendGps() {
     if (this.mqttService && this.mqttService.isConnected()) {
-      this.noticeIamOnline();
+      // this.noticeIamOnline();
       console.log('Trying 2 send GPS');
-      // const sendMsg = {
-      //   user: {bikeName: this.state.bikeName},
-      //   gps: this.state.myGPS,
-      // };
 
       this.mqttService.publish(
         Constants.PATTERN_TOPIC_GPS(this.state.phoneId),
-        JSON.stringify(this.state.myGPS),
+        JSON.stringify({
+          timestamp: Date.now(),
+          user: this.state.user,
+          ...this.state.myGPS,
+        }),
         () => {
           console.log('Send GPS ok!');
         },
@@ -313,31 +258,16 @@ export default class App extends React.Component {
 
       console.log('MQTT connected successfully!');
 
-      this.noticeIamOnline();
+      // this.noticeIamOnline();
       this.subscribeTopics();
     });
-  }
-
-  noticeIamOnline() {
-    this.mqttService.publish(
-      Constants.PATTERN_TOPIC_PING(this.state.phoneId),
-      JSON.stringify({timestamp: Date.now(), user: this.state.user}),
-      err => {
-        if (!err) {
-          console.log('PUBLISHED PING');
-        } else {
-          console.error(err);
-        }
-      },
-      {qos: 1, retain: true},
-    );
   }
 
   subscribeTopics() {
     if (this.mqttService && this.mqttService.isConnected()) {
       this.mqttService.subscribe(
         [
-          Constants.PATTERN_TOPIC_PING('+'),
+          // Constants.PATTERN_TOPIC_PING('+'),
           Constants.PATTERN_TOPIC_CHAT('+'),
           Constants.PATTERN_TOPIC_GPS('+'),
         ],
@@ -408,11 +338,11 @@ export default class App extends React.Component {
             {this.state.teammates.map(
               teammate =>
                 teammate.phoneId !== this.state.phoneId &&
-                teammate.gps && (
+                teammate.coord && (
                   <Marker
-                    coordinate={teammate.gps.coord}
+                    coordinate={teammate.coord}
                     image={require('./assets/icons/navigation2.png')}
-                    rotation={teammate.gps.heading}
+                    rotation={teammate.heading}
                     flat={true}
                     opacity={0.9}
                     title={teammate.user.riderName}
@@ -425,11 +355,12 @@ export default class App extends React.Component {
             )}
           </MapView>
 
-          <View style={[style.toolbox]}>
+          <View style={[style.bottomView]}>
+            <ToolBox style={style.toolBox} />
             <ChatBox
-              // style={style.chatScrollView}
               ref={ref => (this.chatBox = ref)}
               onSend={this.onChatSend}
+              style={style.chatBox}
             />
           </View>
 
@@ -470,14 +401,6 @@ export default class App extends React.Component {
             </View>
           )}
 
-          {/* <View style={style.switchArea}>
-            <Text style={{bottom: -5}}>Auto-center</Text>
-            <Switch
-              style={style.trackSwitch}
-              value={this.state.isFollowUser}
-              onValueChange={value => this.setState({isFollowUser: value})}
-            />
-          </View> */}
         </View>
       </View>
     );
@@ -485,130 +408,24 @@ export default class App extends React.Component {
 }
 
 const style = StyleSheet.create({
-  container: StyleSheet.absoluteFillObject,
+  container: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+  },
   mapView: {
+    position: 'absolute',
     width: '100%',
     height: '100%',
     // alignItems: 'flex-end',
   },
-  toolbox: {
+  bottomView: {
     position: 'absolute',
     width: '100%',
-    height: '35%',
-    backgroundColor: '#ffffff00',
+    height: '30%',
+    backgroundColor: '#ffffff99',
     justifyContent: 'center',
     bottom: 0,
-  },
-  toolView: {
-    width: '100%',
-    height: '65%',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    flex: 1,
-    // backgroundColor: 'rgba(255, 0, 0, 0.2)',
-  },
-  toolViewLeft: {
-    height: '100%',
-    width: '30%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  toolViewRight: {
-    flex: 1,
-    height: '100%',
-    backgroundColor: '#DAEBF200',
-    // flexDirection: 'column',
-  },
-  statusText: {
-    // color: '#454955',
-    fontSize: 35,
-  },
-  speedView: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
-  connectBtn: {
-    width: '100%',
-    height: '25%',
-    // bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    // alignSelf: 'flex-end',
-    backgroundColor: '#998BBA',
-    opacity: 1,
-    color: 'white',
-  },
-  connectBtnDisabled: {
-    width: '100%',
-    height: '25%',
-    // bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#B0A8B9',
-    color: 'white',
-  },
-  connectText: {
-    color: '#EFF1F3',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  switchArea: {
-    // alignSelf: 'flex-end',
-    position: 'absolute',
-    bottom: '20%',
-    right: 0,
-    width: 150,
-    height: 30,
-    marginBottom: 5,
-    justifyContent: 'flex-end',
-    flexDirection: 'row',
-  },
-  trackSwitch: {
-    // position: 'absolute',
-    // // alignSelf: 'flex-end',
-    // bottom: 0,
-    // right: 0,
-    // width: 60,
-    // height: 30,
-    // marginLeft: 10,
-    // marginRight: 5,
-    // marginBottom: 5,
-  },
-  chatScrollView: {
-    //
-  },
-  chatText: {
-    width: '100%',
-    height: '100%',
-    // marginVertical: 5,
-    marginHorizontal: 5,
-  },
-  chatView: {
-    width: '100%',
-    height: '25%',
-    bottom: 0,
-    backgroundColor: '#3286A077',
-    flexDirection: 'row',
-  },
-  chatInput: {
-    // position: 'absolute',
-    bottom: 0,
-    height: '100%',
-    flex: 1,
-    // backgroundColor: 'yellow',
-  },
-  chatBtn: {
-    width: 60,
-    height: '100%',
-    // backgroundColor: '#AA6073',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sendIcon: {
-    //
   },
   menuIconView: {
     position: 'absolute',
