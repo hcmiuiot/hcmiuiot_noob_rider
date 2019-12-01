@@ -68,39 +68,31 @@ export default class App extends React.Component {
     console.log('Phone ID:', this.state.phoneId);
     this.loadConfigAndConnect();
 
-    this.installRemoveInactivityUsersTimer();
-  }
-
-  updateTeammatesInfo(riderName, info) {
-    let foundIdx = this.state.teammates.findIndex(
-      obj => obj.name === riderName,
-    );
-    if (foundIdx === -1) {
-      console.log('Go to add new!');
-      this.setState({
-        teammates: [...this.state.teammates, {name: riderName, info}],
-      });
-    } else {
-      let updateTeammates = [...this.state.teammates];
-      updateTeammates[foundIdx] = {name: riderName, info};
-      this.setState({teammates: updateTeammates});
-    }
-    // console.log(this.state.teammates);
+    // this.installRemoveInactivityUsersTimer();
   }
 
   findTeammateIndexByPhoneId(phoneId) {
     return this.state.teammates.findIndex(teammate => {
-      teammate.phoneId === phoneId;
+      return teammate.phoneId === phoneId;
+    });
+  }
+
+  findGpsIndexByPhoneId(phoneId) {
+    return this.state.gps.findIndex(gps => {
+      return gps.phoneId === phoneId;
     });
   }
 
   _removeInactivityUsers = () => {
     this.setState({
       teammates: this.state.teammates.filter(teammate => {
-        Date.now() - teammate.lastPingTime <= Constants.MAX_AGE;
+        let age = Date.now() - teammate.lastPingTime;
+        // console.log(teammate.user.riderName, age);
+        return age <= Constants.MAX_AGE;
       }),
     });
-    console.log('Filtering inactivity users');
+    // console.log('Filtering inactivity users');
+    console.log(JSON.stringify(this.state.teammates, null, 2));
   };
 
   installRemoveInactivityUsersTimer() {
@@ -113,6 +105,7 @@ export default class App extends React.Component {
   }
 
   handlePing(phoneId, msg) {
+    // this._removeInactivityUsers();
     let foundIdx = this.findTeammateIndexByPhoneId(phoneId);
     let newTeammate = {
       phoneId: phoneId,
@@ -125,17 +118,46 @@ export default class App extends React.Component {
         teammates: update(this.state.teammates, {$push: [newTeammate]}),
       });
     } else {
+      // let foundTeammate = {...this.state.teammates[foundIdx]};
+      // foundTeammate.lastPingTime = newTeammate.lastPingTime;
+      // foundTeammate.user = newTeammate.user;
       this.setState({
         // if exist then update
         teammates: update(this.state.teammates, {
-          foundIdx: {$set: newTeammate},
+          [foundIdx]: {
+            lastPingTime: {$set: newTeammate.lastPingTime},
+            user: {$set: newTeammate.user},
+          },
         }),
       });
     }
+    // console.log(
+    //   'this.state.teammates',
+    //   JSON.stringify(this.state.teammates, null, 2),
+    // );
   }
 
   handleGps(phoneId, msg) {
-    // this.updateTeammatesInfo(phoneId, incomingMsg);
+    let foundIdx = this.findTeammateIndexByPhoneId(phoneId);
+    // let newGps = {
+    //   phoneId: phoneId,
+    //   gps: msg,
+    // };
+    if (foundIdx !== -1) {
+      // let foundTeammate = {...this.state.teammates[foundIdx]};
+      // foundTeammate.gps = msg;
+      // this.setState({})
+      this.setState({
+        // if exist then update
+        teammates: update(this.state.teammates, {
+          [foundIdx]: {gps: {$set: msg}},
+        }),
+      });
+    }
+    // console.log(
+    //   'this.state.teammates',
+    //   JSON.stringify(this.state.teammates, null, 2),
+    // );
   }
 
   handleChat(phoneId, msg) {
@@ -155,17 +177,17 @@ export default class App extends React.Component {
 
     switch (type) {
       case 'ping': {
-        console.log('[PING]', topic, incomingMsg);
+        // console.log('[PING]', topic, incomingMsg);
         this.handlePing(phoneId, incomingMsg);
         break;
       }
       case 'gps': {
-        console.log('[GPS]', topic, incomingMsg);
+        // console.log('[GPS]', topic, incomingMsg);
         this.handleGps(phoneId, incomingMsg);
         break;
       }
       case 'chat': {
-        console.log('[CHAT]', topic, incomingMsg);
+        // console.log('[CHAT]', topic, incomingMsg);
         this.handleChat(phoneId, incomingMsg);
         break;
       }
@@ -174,6 +196,7 @@ export default class App extends React.Component {
 
   try2SendGps() {
     if (this.mqttService && this.mqttService.isConnected()) {
+      this.noticeIamOnline();
       console.log('Trying 2 send GPS');
       // const sendMsg = {
       //   user: {bikeName: this.state.bikeName},
@@ -271,14 +294,11 @@ export default class App extends React.Component {
 
   connect2Mqtt() {
     if (this.mqttService) {
-      this.mqttService.end();
+      this.mqttService.mqttClient.end();
     }
     this.mqttService = new MqttService();
 
     this.mqttService.connect(Constants.URL_MQTT_CONNECTION, () => {
-      // if (err) {
-      //   console.error('connect2Mqtt()', err);
-      // }
       this.mqttService.registerCallback('error', err => {
         console.log('MQTT Error', err);
       });
@@ -299,26 +319,18 @@ export default class App extends React.Component {
   }
 
   noticeIamOnline() {
-    if (!this._pingTimer) {
-      console.log('Created PING_TIMER');
-
-      this._pingTimer = setInterval(() => {
-        if (this.mqttSerive && this.mqttService.isConnected()) {
-          this.mqttService.publish(
-            Constants.PATTERN_TOPIC_PING(this.state.phoneId),
-            JSON.stringify({timestamp: Date.now(), user: this.state.user}),
-            err => {
-              if (!err) {
-                console.log('PUBLISHED PING');
-              } else {
-                console.error(err);
-              }
-            },
-            {qos: 1, retain: true},
-          );
+    this.mqttService.publish(
+      Constants.PATTERN_TOPIC_PING(this.state.phoneId),
+      JSON.stringify({timestamp: Date.now(), user: this.state.user}),
+      err => {
+        if (!err) {
+          console.log('PUBLISHED PING');
+        } else {
+          console.error(err);
         }
-      }, Constants.PING_INTERVAL);
-    }
+      },
+      {qos: 1, retain: true},
+    );
   }
 
   subscribeTopics() {
@@ -389,24 +401,25 @@ export default class App extends React.Component {
               rotation={this.state.myGPS.heading}
               flat={true}
               opacity={0.9}
-              title={this.state.riderName}
-              description={this.state.bikeName}
+              title={this.state.user.riderName}
+              description={this.state.user.bikeName}
             />
 
             {this.state.teammates.map(
               teammate =>
-                teammate.name !== this.state.riderName && (
+                teammate.phoneId !== this.state.phoneId &&
+                teammate.gps && (
                   <Marker
-                    coordinate={teammate.info.gps.coord}
+                    coordinate={teammate.gps.coord}
                     image={require('./assets/icons/navigation2.png')}
-                    rotation={teammate.info.gps.heading}
+                    rotation={teammate.gps.heading}
                     flat={true}
                     opacity={0.9}
-                    title={teammate.name}
-                    description={teammate.info.user.bikeName}>
+                    title={teammate.user.riderName}
+                    description={teammate.user.bikeName}>
                     {/* <View style={{backgroundColor: 'red', padding: 10}}>
-                      <Text>{teammate.name}</Text>
-                    </View> */}
+                    <Text>{teammate.name}</Text>
+                  </View> */}
                   </Marker>
                 ),
             )}
