@@ -17,8 +17,13 @@ import {
   TouchableOpacity,
   // ScrollView,
   View,
-  Text,
+  // Text,
 } from 'react-native';
+
+import update from 'immutability-helper';
+
+import DeviceInfo from 'react-native-device-info';
+
 import Geolocation from 'react-native-geolocation-service';
 import KeepAwake from 'react-native-keep-awake';
 import MapView, {Marker} from 'react-native-maps';
@@ -42,6 +47,8 @@ export default class App extends React.Component {
   constructor(props) {
     super(props);
 
+    console.log('=============================================');
+
     KeepAwake.activate();
 
     this.state = {
@@ -53,12 +60,15 @@ export default class App extends React.Component {
       isMqttConnected: false,
       isFollowUser: true,
       showConfigScreen: false,
-      bikeName: 'unknown',
-      riderName: 'unknown',
+      phoneId: DeviceInfo.getUniqueId(),
+      user: {bikeName: 'unknown', riderName: 'unknown'},
       teammates: [],
     };
 
+    console.log('Phone ID:', this.state.phoneId);
     this.loadConfigAndConnect();
+
+    this.installRemoveInactivityUsersTimer();
   }
 
   updateTeammatesInfo(riderName, info) {
@@ -78,60 +88,127 @@ export default class App extends React.Component {
     // console.log(this.state.teammates);
   }
 
+  findTeammateIndexByPhoneId(phoneId) {
+    return this.state.teammates.findIndex(teammate => {
+      teammate.phoneId === phoneId;
+    });
+  }
+
+  _removeInactivityUsers = () => {
+    this.setState({
+      teammates: this.state.teammates.filter(teammate => {
+        Date.now() - teammate.lastPingTime <= Constants.MAX_AGE;
+      }),
+    });
+    console.log('Filtering inactivity users');
+  };
+
+  installRemoveInactivityUsersTimer() {
+    if (!this.removeTimer) {
+      this.removeTimer = setInterval(
+        this._removeInactivityUsers,
+        Constants.INTERVAL_CHECK_MAX_AGE,
+      );
+    }
+  }
+
+  handlePing(phoneId, msg) {
+    let foundIdx = this.findTeammateIndexByPhoneId(phoneId);
+    let newTeammate = {
+      phoneId: phoneId,
+      lastPingTime: msg.timestamp,
+      user: msg.user,
+    };
+    if (foundIdx === -1) {
+      // not exist
+      this.setState({
+        teammates: update(this.state.teammates, {$push: [newTeammate]}),
+      });
+    } else {
+      this.setState({
+        // if exist then update
+        teammates: update(this.state.teammates, {
+          foundIdx: {$set: newTeammate},
+        }),
+      });
+    }
+  }
+
+  handleGps(phoneId, msg) {
+    // this.updateTeammatesInfo(phoneId, incomingMsg);
+  }
+
+  handleChat(phoneId, msg) {
+    if (this.chatBox) {
+      let isMyMsg = phoneId === this.state.phoneId;
+      let senderName = isMyMsg ? 'You' : msg.from;
+      let unixTime = msg.timestamp;
+      this.chatBox.addNewChatBadge(senderName, msg.msg, !isMyMsg, unixTime);
+    }
+  }
+
   handleIncomingMqtt = (topic, msg, packet) => {
     const topicSegs = topic.split('/');
     const incomingMsg = JSON.parse(msg.toString());
-    let sender = topicSegs[1];
-    let type = topicSegs[2];
-    let isMyMsg = sender === this.state.riderName;
-
-    // console.log(packet);
+    let type = topicSegs[1];
+    let phoneId = topicSegs[2];
 
     switch (type) {
+      case 'ping': {
+        console.log('[PING]', topic, incomingMsg);
+        this.handlePing(phoneId, incomingMsg);
+        break;
+      }
       case 'gps': {
         console.log('[GPS]', topic, incomingMsg);
-        this.updateTeammatesInfo(sender, incomingMsg);
+        this.handleGps(phoneId, incomingMsg);
         break;
       }
       case 'chat': {
         console.log('[CHAT]', topic, incomingMsg);
-        if (this.chatBox) {
-          this.chatBox.addNewChatBadge(sender, incomingMsg.msg, !isMyMsg);
-        }
+        this.handleChat(phoneId, incomingMsg);
+        break;
       }
     }
   };
 
   try2SendGps() {
-    if (this.mqttService) {
+    if (this.mqttService && this.mqttService.isConnected()) {
       console.log('Trying 2 send GPS');
-      const sendMsg = {
-        user: {bikeName: this.state.bikeName},
-        gps: this.state.myGPS,
-      };
+      // const sendMsg = {
+      //   user: {bikeName: this.state.bikeName},
+      //   gps: this.state.myGPS,
+      // };
+
       this.mqttService.publish(
-        `noob_rider/${this.state.riderName}/gps`,
-        JSON.stringify(sendMsg),
-        {qos: 0, retain: true, properties: {messageExpiryInterval: 5}},
+        Constants.PATTERN_TOPIC_GPS(this.state.phoneId),
+        JSON.stringify(this.state.myGPS),
+        () => {
+          console.log('Send GPS ok!');
+        },
+        {qos: 1, retain: true},
       );
     }
   }
 
-  try2SendChat(to, msg) {
-    if (this.mqttService) {
+  try2SendChat(from, msg) {
+    if (this.mqttService && this.mqttService.isConnected()) {
       console.log('Trying 2 send Chat');
-      const sendMsg = {to, msg};
+      const sendMsg = {timestamp: Date.now(), from, msg};
       this.mqttService.publish(
-        `noob_rider/${this.state.riderName}/chat`,
+        Constants.PATTERN_TOPIC_CHAT(this.state.phoneId),
         JSON.stringify(sendMsg),
-        {qos: 1, retain: true, properties: {messageExpiryInterval: 5}},
+        () => {
+          console.log('Send CHAT ok!');
+        },
+        {qos: 1, retain: true},
       );
     }
   }
 
   onChatSend = msg => {
-    if (this.state.riderName) {
-      this.try2SendChat('', msg);
+    if (this.state.user.riderName) {
+      this.try2SendChat(this.state.user.riderName, msg);
     }
   };
 
@@ -193,17 +270,78 @@ export default class App extends React.Component {
   };
 
   connect2Mqtt() {
+    if (this.mqttService) {
+      this.mqttService.end();
+    }
     this.mqttService = new MqttService();
+
     this.mqttService.connect(Constants.URL_MQTT_CONNECTION, () => {
-      this.setState({isMqttConnected: true});
-      console.log('MQTT connected successfully!');
-      this.mqttService.subscribe('noob_rider/+/+', {qos: 1}, err => {
-        if (!err) {
-          console.log('Subscribe MQTT okay!');
-          this.mqttService.registerCallback('message', this.handleIncomingMqtt);
-        }
+      // if (err) {
+      //   console.error('connect2Mqtt()', err);
+      // }
+      this.mqttService.registerCallback('error', err => {
+        console.log('MQTT Error', err);
       });
+
+      this.setState({isMqttConnected: true});
+
+      this.mqttService.registerCallback('offline', () =>
+        this.setState({isMqttConnected: false}),
+      );
+
+      this.mqttService.registerCallback('message', this.handleIncomingMqtt);
+
+      console.log('MQTT connected successfully!');
+      this.noticeIamOnline();
     });
+    this.subscribeTopics();
+  }
+
+  noticeIamOnline() {
+    if (!this._pingTimer) {
+      console.log('Created PING_TIMER');
+
+      this._pingTimer = setInterval(() => {
+        if (this.mqttService.isConnected()) {
+          this.mqttService.publish(
+            Constants.PATTERN_TOPIC_PING(this.state.phoneId),
+            JSON.stringify({timestamp: Date.now(), user: this.state.user}),
+            err => {
+              if (!err) {
+                console.log('PUBLISHED PING');
+              } else {
+                console.error(err);
+              }
+            },
+            {qos: 1, retain: true},
+          );
+        }
+      }, Constants.PING_INTERVAL);
+    }
+  }
+
+  subscribeTopics() {
+    if (this.mqttService.isConnected()) {
+      this.mqttService.subscribe(
+        [
+          Constants.PATTERN_TOPIC_PING('+'),
+          Constants.PATTERN_TOPIC_CHAT('+'),
+          Constants.PATTERN_TOPIC_GPS('+'),
+        ],
+        (err, granted) => {
+          if (!err) {
+            granted.map(grant => {
+              console.log(
+                `Successfully subscribe to "${grant.topic}" qos:${grant.qos}`,
+              );
+            });
+          } else {
+            console.error(err);
+          }
+        },
+        {qos: 1},
+      );
+    }
   }
 
   componentDidMount() {
@@ -212,7 +350,10 @@ export default class App extends React.Component {
 
   loadConfigAndConnect() {
     Storage.readConfigs(configs => {
-      this.setState({riderName: configs.riderName, bikeName: configs.bikeName});
+      this.setState({
+        user: {riderName: configs.riderName, bikeName: configs.bikeName},
+      });
+      // alert('Ohyeah');
       this.connect2Mqtt();
     });
   }
@@ -303,6 +444,15 @@ export default class App extends React.Component {
                   style={StyleSheet.absoluteFillObject}
                 />
               </TouchableOpacity>
+              <Icon
+                name={
+                  this.state.isMqttConnected ? 'check-circle' : 'times-circle'
+                }
+                solid
+                color={this.state.isMqttConnected ? '#00ff0088' : '#ff000088'}
+                size={22}
+                style={style.statusIcon}
+              />
             </View>
           )}
 
@@ -331,12 +481,9 @@ const style = StyleSheet.create({
     position: 'absolute',
     width: '100%',
     height: '35%',
-    // maxHeight: '35%',
-    // marginBottom: 0,
-    // backgroundColor: 'yellow',
+    backgroundColor: '#ffffff00',
     justifyContent: 'center',
     bottom: 0,
-    // opacity: 0.85,
   },
   toolView: {
     width: '100%',
@@ -453,11 +600,15 @@ const style = StyleSheet.create({
     position: 'absolute',
     left: 0,
     top: 0,
-    width: 30,
+    // flexDirection: 'row',
+    width: 90,
     height: 30,
     marginTop: 30,
     margin: 10,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  statusIcon: {
+    marginTop: 3,
   },
 });
