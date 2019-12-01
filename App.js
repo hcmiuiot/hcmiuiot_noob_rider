@@ -292,9 +292,10 @@ export default class App extends React.Component {
       this.mqttService.registerCallback('message', this.handleIncomingMqtt);
 
       console.log('MQTT connected successfully!');
+
       this.noticeIamOnline();
+      this.subscribeTopics();
     });
-    this.subscribeTopics();
   }
 
   noticeIamOnline() {
@@ -302,7 +303,7 @@ export default class App extends React.Component {
       console.log('Created PING_TIMER');
 
       this._pingTimer = setInterval(() => {
-        if (this.mqttService.isConnected()) {
+        if (this.mqttSerive && this.mqttService.isConnected()) {
           this.mqttService.publish(
             Constants.PATTERN_TOPIC_PING(this.state.phoneId),
             JSON.stringify({timestamp: Date.now(), user: this.state.user}),
@@ -321,7 +322,7 @@ export default class App extends React.Component {
   }
 
   subscribeTopics() {
-    if (this.mqttService.isConnected()) {
+    if (this.mqttService && this.mqttService.isConnected()) {
       this.mqttService.subscribe(
         [
           Constants.PATTERN_TOPIC_PING('+'),
