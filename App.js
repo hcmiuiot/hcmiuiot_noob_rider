@@ -101,7 +101,7 @@ export default class App extends React.Component {
       }),
     });
     console.log('Filtering inactivity users');
-  }
+  };
 
   installRemoveInactivityUsersTimer() {
     if (!this.removeTimer) {
@@ -270,7 +270,9 @@ export default class App extends React.Component {
   };
 
   connect2Mqtt() {
-    // alert('connect2Mqtt');
+    if (this.mqttService) {
+      this.mqttService.end();
+    }
     this.mqttService = new MqttService();
 
     this.mqttService.connect(Constants.URL_MQTT_CONNECTION, () => {
@@ -291,8 +293,8 @@ export default class App extends React.Component {
 
       console.log('MQTT connected successfully!');
       this.noticeIamOnline();
-      this.subscribeTopics();
     });
+    this.subscribeTopics();
   }
 
   noticeIamOnline() {
