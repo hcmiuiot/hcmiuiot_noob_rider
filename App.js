@@ -423,7 +423,7 @@ const style = StyleSheet.create({
     position: 'absolute',
     width: '100%',
     height: '30%',
-    backgroundColor: '#ffffff99',
+    backgroundColor: '#ECACFF33',
     justifyContent: 'center',
     bottom: 0,
   },

@@ -12,14 +12,22 @@ export default class ToolBox extends Component {
         useAngle={true}
         angle={30}
         style={style.container}>
+        <TouchableOpacity style={style.centerTouch}>
+          <Icon
+            name="crosshairs"
+            style={style.iconCenter}
+            size={20}
+            color="#FCEAFF"
+          />
+        </TouchableOpacity>
         <TouchableOpacity style={style.lockPositionTouch}>
           <Icon name="lock" style={style.icon} size={20} color="#FCEAFF" />
           <Text style={style.lockText}>Lock position</Text>
         </TouchableOpacity>
 
-        <Text style={style.copyrightText}>
+        {/* <Text style={style.copyrightText}>
           Copyright © 2019 by ReactNativer
-        </Text>
+        </Text> */}
 
         {/* <View style={style.switchArea}>
           <Text style={{bottom: -5}}>Auto-center</Text>
@@ -41,8 +49,12 @@ const style = StyleSheet.create({
     // backgroundColor: '#FF8B61EE',
     alignItems: 'center',
   },
+  iconCenter: {
+    margin: 10,
+  },
   icon: {
     margin: 10,
+    marginLeft: 5, 
     shadowColor: 'green',
     textShadowOffset: {
       width: 5,
@@ -53,9 +65,15 @@ const style = StyleSheet.create({
 
     elevation: 7,
   },
+  centerTouch: {
+    height: '100%',
+    // backgroundColor: 'red',
+  },
   lockPositionTouch: {
     flexDirection: 'row',
     alignItems: 'center',
+    height: '100%',
+    // backgroundColor: 'red',
   },
   lockText: {
     color: 'white',
@@ -67,5 +85,5 @@ const style = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     color: 'white',
-  }
+  },
 });
