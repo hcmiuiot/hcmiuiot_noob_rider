@@ -160,12 +160,6 @@ const style = StyleSheet.create({
   },
   chatInput: {
     flex: 1,
-    // justifyContent: 'center',
-    // alignItems: 'center',
-    // alignContent: 'center',
-    // textAlignVertical: 'center',
-    // textAlign: 'auto',
-    // backgroundColor: 'white',
     borderRadius: 30,
     borderColor: '#DBDADADD',
     backgroundColor: '#DBDADADD',
