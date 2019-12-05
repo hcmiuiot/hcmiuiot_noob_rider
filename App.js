@@ -314,10 +314,10 @@ export default class App extends React.Component {
           <MapView
             style={[StyleSheet.absoluteFillObject]}
             initialRegion={{
-              latitude: 10.8381656,
-              longitude: 106.6302742,
-              latitudeDelta: 0.0,
-              longitudeDelta: 0.0,
+              latitude: 10.8777063,
+              longitude: 106.8006299,
+              latitudeDelta: 0.03,
+              longitudeDelta: 0.02,
             }}
             ref={ref => {
               this.mapView = ref;
@@ -376,31 +376,44 @@ export default class App extends React.Component {
             />
           )}
           {!this.state.showConfigScreen && (
-            <View style={style.menuIconView}>
-              <TouchableOpacity
-                style={StyleSheet.absoluteFillObject}
-                onPress={() => {
-                  this.setState({showConfigScreen: true});
-                }}>
-                <Icon
-                  name="bars"
-                  size={30}
-                  color="#11111188"
+            <View>
+              <View style={style.menuIconView}>
+                <TouchableOpacity
                   style={StyleSheet.absoluteFillObject}
+                  onPress={() => {
+                    this.setState({showConfigScreen: true});
+                  }}>
+                  <Icon
+                    name="bars"
+                    size={30}
+                    color="#11111188"
+                    style={StyleSheet.absoluteFillObject}
+                  />
+                </TouchableOpacity>
+                <Icon
+                  name={
+                    this.state.isMqttConnected ? 'check-circle' : 'times-circle'
+                  }
+                  solid
+                  color={this.state.isMqttConnected ? '#00ff0088' : '#ff000088'}
+                  size={22}
+                  style={style.statusIcon}
                 />
-              </TouchableOpacity>
-              <Icon
-                name={
-                  this.state.isMqttConnected ? 'check-circle' : 'times-circle'
-                }
-                solid
-                color={this.state.isMqttConnected ? '#00ff0088' : '#ff000088'}
-                size={22}
-                style={style.statusIcon}
-              />
+              </View>
+              <View style={style.fastToolView}>
+                <TouchableOpacity
+                  onPress={() => {}}
+                  style={style.fastToolTouch}>
+                  <Icon name="car-crash" size={22} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {}}
+                  style={style.fastToolTouch}>
+                  <Icon name="exclamation-circle" size={22} />
+                </TouchableOpacity>
+              </View>
             </View>
           )}
-
         </View>
       </View>
     );
@@ -441,5 +454,20 @@ const style = StyleSheet.create({
   },
   statusIcon: {
     marginTop: 3,
+  },
+  fastToolView: {
+    position: 'absolute',
+    left: 0,
+    top: 60,
+    margin: 10,
+    alignItems: 'center',
+    opacity: 0.5,
+  },
+  fastToolTouch: {
+    height: 30,
+    width: 30,
+    marginVertical: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

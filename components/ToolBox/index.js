@@ -54,7 +54,7 @@ const style = StyleSheet.create({
   },
   icon: {
     margin: 10,
-    marginLeft: 5, 
+    marginLeft: 5,
     shadowColor: 'green',
     textShadowOffset: {
       width: 5,
