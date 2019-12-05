@@ -22,6 +22,15 @@ const readConfigs = async callback => {
   const configs = await AsyncStorage.getItem('@NoobRider_configs');
   if (configs) {
     callback(JSON.parse(configs));
+  } else {
+    Alert.alert(
+      'Hi!',
+      "Let's tap the Settings icon on the top left and connect to teammates now :)",
+      [{text: 'Got it!'}],
+      {
+        cancelable: true,
+      },
+    );
   }
 };
 

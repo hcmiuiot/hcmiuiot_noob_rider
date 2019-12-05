@@ -1,5 +1,4 @@
 import {PermissionsAndroid} from 'react-native';
-import Constants from '../Constants';
 
 export async function requestGeolocationPermission() {
   try {
@@ -16,8 +15,6 @@ export async function requestGeolocationPermission() {
       },
     );
     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-      // console.log('You can use the GPS');
-      // console.log(Constants.DIR_ICON_NAVIGATION);
       return true;
     } else {
       console.log('GPS permission denied');

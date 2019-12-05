@@ -17,6 +17,7 @@ import {
   TouchableOpacity,
   // ScrollView,
   View,
+  ToastAndroid,
   // Text,
 } from 'react-native';
 
@@ -37,12 +38,7 @@ import {requestGeolocationPermission} from './services/Permission';
 import Storage from './services/Storage';
 import ToolBox from './components/ToolBox';
 
-// import LinearGradient from 'react-native-linear-gradient';
-// import ChatBadge from './components/ChatBox/ChatBadge';
-
 console.disableYellowBox = true;
-
-// const B = props => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>;
 
 export default class App extends React.Component {
   constructor(props) {
@@ -204,10 +200,8 @@ export default class App extends React.Component {
 
   onMapReadyEvent = () => {
     if (requestGeolocationPermission()) {
-      // console.log('GPS is ready!');
       Geolocation.watchPosition(
         position => {
-          // console.log(position);
           this.setState({
             myGPS: {
               coord: {
@@ -249,6 +243,11 @@ export default class App extends React.Component {
       });
 
       this.setState({isMqttConnected: true});
+      ToastAndroid.showWithGravity(
+        'Welcome',
+        ToastAndroid.SHORT,
+        ToastAndroid.TOP,
+      );
 
       this.mqttService.registerCallback('offline', () =>
         this.setState({isMqttConnected: false}),
@@ -258,7 +257,6 @@ export default class App extends React.Component {
 
       console.log('MQTT connected successfully!');
 
-      // this.noticeIamOnline();
       this.subscribeTopics();
     });
   }
@@ -287,8 +285,17 @@ export default class App extends React.Component {
     }
   }
 
-  componentDidMount() {
-    // Proximity.addListener(() => this.centerMap());
+  unsubscribeTopics() {
+    if (this.mqttService) {
+      this.mqttService.unsubscribe(
+        [Constants.PATTERN_TOPIC_CHAT('+'), Constants.PATTERN_TOPIC_GPS('+')],
+        err => {
+          if (err) {
+            console.error(err);
+          }
+        },
+      );
+    }
   }
 
   loadConfigAndConnect() {
@@ -296,13 +303,15 @@ export default class App extends React.Component {
       this.setState({
         user: {riderName: configs.riderName, bikeName: configs.bikeName},
       });
-      // alert('Ohyeah');
       this.connect2Mqtt();
     });
   }
 
+  componentWillUnmount() {
+    this.unsubscribeTopics();
+  }
+
   render() {
-    // const chatHeight = this.state.showConfigScreen ? 0 : '40%';
     return (
       <View style={style.container}>
         <StatusBar
@@ -356,7 +365,22 @@ export default class App extends React.Component {
           </MapView>
 
           <View style={[style.bottomView]}>
-            <ToolBox style={style.toolBox} />
+            <ToolBox
+              style={style.toolBox}
+              isFollowUser={this.state.isFollowUser}
+              onChangeMode={isFollowUser => {
+                this.setState({isFollowUser: isFollowUser});
+              }}
+              onCenter={() => {
+                this.centerMap();
+                this.setState({isMqttConnected: true});
+                ToastAndroid.showWithGravity(
+                  'Map centering',
+                  ToastAndroid.SHORT,
+                  ToastAndroid.TOP,
+                );
+              }}
+            />
             <ChatBox
               ref={ref => (this.chatBox = ref)}
               onSend={this.onChatSend}
@@ -384,7 +408,7 @@ export default class App extends React.Component {
                     this.setState({showConfigScreen: true});
                   }}>
                   <Icon
-                    name="bars"
+                    name="cog"
                     size={30}
                     color="#11111188"
                     style={StyleSheet.absoluteFillObject}
@@ -453,7 +477,7 @@ const style = StyleSheet.create({
     alignItems: 'center',
   },
   statusIcon: {
-    marginTop: 3,
+    marginLeft: 15,
   },
   fastToolView: {
     position: 'absolute',

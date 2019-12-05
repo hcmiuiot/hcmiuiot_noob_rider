@@ -5,24 +5,43 @@ import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
 export default class ToolBox extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {isFollowUser: props.isFollowUser};
+  }
+
+  onChangeMode() {
+    this.setState({isFollowUser: !this.state.isFollowUser});
+    if (this.props.onChangeMode) {
+      this.props.onChangeMode(this.state.isFollowUser);
+    }
+  }
+
   render() {
+    let mode_str = this.state.isFollowUser ? 'Auto center' : 'Free look';
+    let mode_icon = this.state.isFollowUser ? 'lock' : 'unlock';
     return (
       <LinearGradient
         colors={['#E138B199', '#FF538699', '#FF8B6199']}
         useAngle={true}
         angle={30}
         style={style.container}>
-        <TouchableOpacity style={style.centerTouch}>
+        <TouchableOpacity
+          style={style.centerTouch}
+          onPress={() => this.props.onCenter()}>
           <Icon
             name="crosshairs"
             style={style.iconCenter}
             size={20}
             color="#FCEAFF"
           />
+          {/* <Text>Center</Text> */}
         </TouchableOpacity>
-        <TouchableOpacity style={style.lockPositionTouch}>
-          <Icon name="lock" style={style.icon} size={20} color="#FCEAFF" />
-          <Text style={style.lockText}>Lock position</Text>
+        <TouchableOpacity
+          style={style.lockPositionTouch}
+          onPress={() => this.onChangeMode()}>
+          <Icon name={mode_icon} style={style.icon} size={20} color="#FCEAFF" />
+          <Text style={style.lockText}>{mode_str}</Text>
         </TouchableOpacity>
 
         {/* <Text style={style.copyrightText}>

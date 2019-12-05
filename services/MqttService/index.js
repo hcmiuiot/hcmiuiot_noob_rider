@@ -24,6 +24,10 @@ export default class MqttService {
     this.mqttClient.subscribe(topic, options, callback);
   }
 
+  unsubscribe(topic, callback, options = {}) {
+    this.mqttClient.unsubscribe(topic, options, callback);
+  }
+
   disconnect(onDisconnect) {
     //
   }
