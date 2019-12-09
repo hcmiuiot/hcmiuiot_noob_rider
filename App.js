@@ -176,9 +176,9 @@ export default class App extends React.Component {
     }
   };
 
-  centerMap() {
+  centerMap(force = false) {
     if (this.mapView) {
-      if (this.state.isFollowUser) {
+      if (force || this.state.isFollowUser) {
         let camera = {
           center: this.state.myGPS.coord,
           pitch: 0,
@@ -369,10 +369,10 @@ export default class App extends React.Component {
               style={style.toolBox}
               isFollowUser={this.state.isFollowUser}
               onChangeMode={isFollowUser => {
-                this.setState({isFollowUser: isFollowUser});
+                this.setState({isFollowUser});
               }}
               onCenter={() => {
-                this.centerMap();
+                this.centerMap(true);
                 this.setState({isMqttConnected: true});
                 ToastAndroid.showWithGravity(
                   'Map centering',
