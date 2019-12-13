@@ -60,6 +60,7 @@ export default class App extends React.Component {
       phoneId: DeviceInfo.getUniqueId(),
       user: {bikeName: 'unknown', riderName: 'unknown'},
       teammates: [],
+      marks: [],
     };
 
     console.log('Phone ID:', this.state.phoneId);
@@ -106,6 +107,17 @@ export default class App extends React.Component {
     }
   }
 
+  handleMark(phoneId, msg) {
+    if (msg.timestamp && Date.now() - msg.timestamp <= Constants.MAX_MARK_AGE) {
+      let newMarkPacket = {phoneId, ...msg};
+      console.log(newMarkPacket);
+
+      this.setState({
+        marks: update(this.state.marks, {$push: [newMarkPacket]}),
+      });
+    }
+  }
+
   handleChat(phoneId, msg) {
     if (this.chatBox) {
       let isMyMsg = phoneId === this.state.phoneId;
@@ -132,6 +144,11 @@ export default class App extends React.Component {
         this.handleChat(phoneId, incomingMsg);
         break;
       }
+      case 'mark': {
+        // console.log('[CHAT]', topic, incomingMsg);
+        this.handleMark(phoneId, incomingMsg);
+        break;
+      }
     }
   };
 
@@ -149,6 +166,26 @@ export default class App extends React.Component {
         }),
         () => {
           console.log('Send GPS ok!');
+        },
+        {qos: 1, retain: true},
+      );
+    }
+  }
+
+  try2SendMark(markType) {
+    if (this.mqttService && this.mqttService.isConnected()) {
+      // this.noticeIamOnline();
+      console.log('Trying 2 send Mark');
+
+      this.mqttService.publish(
+        Constants.PATTERN_TOPIC_MARK(this.state.phoneId),
+        JSON.stringify({
+          timestamp: Date.now(),
+          markType,
+          ...this.state.myGPS,
+        }),
+        () => {
+          console.log('Send Mark ok!');
         },
         {qos: 1, retain: true},
       );
@@ -265,7 +302,7 @@ export default class App extends React.Component {
     if (this.mqttService && this.mqttService.isConnected()) {
       this.mqttService.subscribe(
         [
-          // Constants.PATTERN_TOPIC_PING('+'),
+          Constants.PATTERN_TOPIC_MARK('+'),
           Constants.PATTERN_TOPIC_CHAT('+'),
           Constants.PATTERN_TOPIC_GPS('+'),
         ],
@@ -360,6 +397,20 @@ export default class App extends React.Component {
                     <Text>{teammate.name}</Text>
                   </View> */}
                   </Marker>
+                ),
+            )}
+
+            {this.state.marks.map(
+              mark =>
+                mark.coord && (
+                  <Marker
+                    coordinate={mark.coord}
+                    image={require(`./assets/icons/${mark.markType}.png`)}
+                    rotation={mark.heading}
+                    flat={true}
+                    opacity={0.9}
+                    // title={mark.user.riderName}
+                  />
                 ),
             )}
           </MapView>

@@ -4,10 +4,11 @@ const Constants = {
   //
   PING_INTERVAL: 10000,
   MAX_AGE: 600000, // ms
+  MAX_MARK_AGE: 3600000,
   // INTERVAL_CHECK_MAX_AGE: 20000, //ms
   PATTERN_TOPIC_GPS: id => `nr/gps/${id}`,
   PATTERN_TOPIC_CHAT: id => `nr/chat/${id}`,
-  // PATTERN_TOPIC_PING: id => `nr/ping/${id}`,
+  PATTERN_TOPIC_MARK: id => `nr/mark/${id}`,
 };
 
 export default Constants;
