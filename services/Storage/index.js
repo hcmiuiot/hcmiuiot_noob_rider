@@ -23,7 +23,7 @@ const readConfigs = async (callback, freshCallback) => {
     callback(JSON.parse(configs));
   } else {
     if (freshCallback) {
-      freshCallback;
+      freshCallback();
     }
   }
 };
