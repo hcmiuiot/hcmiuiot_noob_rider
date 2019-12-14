@@ -381,6 +381,20 @@ export default class App extends React.Component {
               description={this.state.user.bikeName}
             />
 
+            {this.state.marks.map(
+              mark =>
+                mark.coord && (
+                  <Marker
+                    coordinate={mark.coord}
+                    image={require(`./assets/icons/police.png`)}
+                    rotation={mark.heading}
+                    // flat={true}
+                    opacity={0.9}
+                    // title={mark.user.riderName}
+                  />
+                ),
+            )}
+
             {this.state.teammates.map(
               teammate =>
                 teammate.phoneId !== this.state.phoneId &&
@@ -397,20 +411,6 @@ export default class App extends React.Component {
                     <Text>{teammate.name}</Text>
                   </View> */}
                   </Marker>
-                ),
-            )}
-
-            {this.state.marks.map(
-              mark =>
-                mark.coord && (
-                  <Marker
-                    coordinate={mark.coord}
-                    image={require(`./assets/icons/${mark.markType}.png`)}
-                    rotation={mark.heading}
-                    flat={true}
-                    opacity={0.9}
-                    // title={mark.user.riderName}
-                  />
                 ),
             )}
           </MapView>
@@ -477,12 +477,16 @@ export default class App extends React.Component {
               </View>
               <View style={style.fastToolView}>
                 <TouchableOpacity
-                  onPress={() => {}}
+                  onPress={() => {
+                    this.try2SendMark('accident');
+                  }}
                   style={style.fastToolTouch}>
                   <Icon name="car-crash" size={22} />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => {}}
+                  onPress={() => {
+                    this.try2SendMark('police');
+                  }}
                   style={style.fastToolTouch}>
                   <Icon name="exclamation-circle" size={22} />
                 </TouchableOpacity>
