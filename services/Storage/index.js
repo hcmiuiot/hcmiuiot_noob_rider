@@ -1,4 +1,3 @@
-import {Alert} from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 
 const saveConfigs = async configs => {
@@ -18,19 +17,14 @@ const saveConfigs = async configs => {
   }
 };
 
-const readConfigs = async callback => {
+const readConfigs = async (callback, freshCallback) => {
   const configs = await AsyncStorage.getItem('@NoobRider_configs');
   if (configs) {
     callback(JSON.parse(configs));
   } else {
-    Alert.alert(
-      'Hi!',
-      "Let's tap the Settings icon on the top left and connect to teammates now :)",
-      [{text: 'Got it!'}],
-      {
-        cancelable: true,
-      },
-    );
+    if (freshCallback) {
+      freshCallback;
+    }
   }
 };
 

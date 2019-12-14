@@ -10,7 +10,7 @@ const playInstant = filename => {
 
 export default {
   play: playInstant,
-  NEW_MESSAGE: 'yanghelloo',
+  HELLO: 'yanghelloo',
   SELFIE: 'selfie',
   CENTURY: 'century',
   CORTADO: 'cortado',
@@ -22,4 +22,5 @@ export default {
   SAX_ROLL: 'saxroll',
   SUCK_DICK: 'suckadick',
   YEET: 'yeet',
+  NOPE: 'engineer_no01',
 };

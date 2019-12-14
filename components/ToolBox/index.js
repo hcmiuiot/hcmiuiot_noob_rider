@@ -11,9 +11,10 @@ export default class ToolBox extends Component {
   }
 
   onChangeMode() {
-    this.setState({isFollowUser: !this.state.isFollowUser});
+    let newState = !this.state.isFollowUser;
+    this.setState({isFollowUser: newState});
     if (this.props.onChangeMode) {
-      this.props.onChangeMode(this.state.isFollowUser);
+      this.props.onChangeMode(newState);
     }
   }
 
@@ -48,14 +49,6 @@ export default class ToolBox extends Component {
           Speed: 60 km/h
         </Text> */}
 
-        {/* <View style={style.switchArea}>
-          <Text style={{bottom: -5}}>Auto-center</Text>
-          <Switch
-            style={style.trackSwitch}
-            // value={this.state.isFollowUser}
-            // onValueChange={value => this.setState({isFollowUser: value})}
-          />
-        </View> */}
       </LinearGradient>
     );
   }

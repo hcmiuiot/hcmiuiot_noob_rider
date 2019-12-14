@@ -18,6 +18,8 @@ import {
   // ScrollView,
   View,
   ToastAndroid,
+  Image,
+  Alert,
   // Text,
 } from 'react-native';
 
@@ -37,6 +39,7 @@ import MqttService from './services/MqttService';
 import {requestGeolocationPermission} from './services/Permission';
 import Storage from './services/Storage';
 import ToolBox from './components/ToolBox';
+import Sound from './services/Sound';
 
 console.disableYellowBox = true;
 
@@ -64,7 +67,7 @@ export default class App extends React.Component {
     };
 
     console.log('Phone ID:', this.state.phoneId);
-    this.loadConfigAndConnect();
+    this.loadConfigAndConnect(true);
   }
 
   findTeammateIndexByPhoneId(phoneId) {
@@ -145,7 +148,7 @@ export default class App extends React.Component {
         break;
       }
       case 'mark': {
-        // console.log('[CHAT]', topic, incomingMsg);
+        // console.log('[MARK]', topic, incomingMsg);
         this.handleMark(phoneId, incomingMsg);
         break;
       }
@@ -335,13 +338,24 @@ export default class App extends React.Component {
     }
   }
 
-  loadConfigAndConnect() {
+  loadConfigAndConnect(showHelloNoti = false) {
+    const helloAlert = showHelloNoti
+      ? () =>
+          Alert.alert(
+            'Hi!',
+            "Let's tap the Settings icon on the top left and connect to teammates now :)",
+            [{text: 'Got it!'}],
+            {
+              cancelable: true,
+            },
+          )
+      : null;
     Storage.readConfigs(configs => {
       this.setState({
         user: {riderName: configs.riderName, bikeName: configs.bikeName},
       });
       this.connect2Mqtt();
-    });
+    }, helloAlert);
   }
 
   componentWillUnmount() {
@@ -372,6 +386,7 @@ export default class App extends React.Component {
             }}
             onMapReady={this.onMapReadyEvent}
             loadingEnabled={true}
+            // showsTraffic={true}
             showsCompass={false}>
             <Marker
               coordinate={this.state.myGPS.coord}
@@ -390,10 +405,10 @@ export default class App extends React.Component {
                     coordinate={mark.coord}
                     image={
                       mark.markType === 'police'
-                        ? require('./assets/icons/police.png')
+                        ? require('./assets/icons/police-officer.png')
                         : mark.markType === 'petro'
                         ? require('./assets/icons/petro.png')
-                        : require('./assets/icons/accident.png')
+                        : require('./assets/icons/car-accident2.png')
                     }
                     rotation={mark.heading}
                     // flat={true}
@@ -451,9 +466,11 @@ export default class App extends React.Component {
             <ConfigScreeen
               onGoBack={() => {
                 this.setState({showConfigScreen: false});
+                Sound.play(Sound.NOPE);
               }}
               onSave={() => {
                 this.loadConfigAndConnect();
+
                 this.setState({showConfigScreen: false});
               }}
             />
@@ -464,14 +481,19 @@ export default class App extends React.Component {
                 <TouchableOpacity
                   style={StyleSheet.absoluteFillObject}
                   onPress={() => {
+                    Sound.play(Sound.HELLO);
                     this.setState({showConfigScreen: true});
                   }}>
-                  <Icon
+                  <Image
+                    source={require('./assets/icons/technical-support.png')}
+                    style={{width: 40, height: 40}}
+                  />
+                  {/* <Icon
                     name="cog"
                     size={35}
                     color="#11111188"
                     style={StyleSheet.absoluteFillObject}
-                  />
+                  /> */}
                 </TouchableOpacity>
                 {/* <Icon
                   name={
@@ -488,22 +510,34 @@ export default class App extends React.Component {
                   onPress={() => {
                     this.try2SendMark('petro');
                   }}
-                  style={[style.fastToolTouch, {left: 5}]}>
-                  <Icon name="gas-pump" size={33} color={'green'} />
+                  style={style.fastToolTouch}>
+                  <Image
+                    source={require('./assets/icons/gas-station.png')}
+                    style={{width: 40, height: 40}}
+                  />
+                  {/* <Icon name="gas-pump" size={33} color={'green'} /> */}
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
                     this.try2SendMark('accident');
                   }}
-                  style={[style.fastToolTouch, {left: -2}]}>
-                  <Icon name="car-crash" size={33} color={'orange'} />
+                  style={style.fastToolTouch}>
+                  <Image
+                    source={require('./assets/icons/car-accident.png')}
+                    style={{width: 48, height: 48}}
+                  />
+                  {/* <Icon name="car-crash" size={33} color={'orange'} /> */}
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
                     this.try2SendMark('police');
                   }}
-                  style={style.fastToolTouch}>
-                  <Icon name="exclamation-circle" size={35} color={'red'} />
+                  style={[style.fastToolTouch, {top: 5}]}>
+                  <Image
+                    source={require('./assets/icons/police.png')}
+                    style={{width: 45, height: 45}}
+                  />
+                  {/* <Icon name="exclamation-circle" size={35} color={'red'} /> */}
                 </TouchableOpacity>
               </View>
             </View>
@@ -551,12 +585,12 @@ const style = StyleSheet.create({
   },
   fastToolView: {
     position: 'absolute',
-    left: 0,
+    left: 5,
     top: 70,
     margin: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    opacity: 0.7,
+    opacity: 0.8,
   },
   fastToolTouch: {
     height: 40,
@@ -564,5 +598,6 @@ const style = StyleSheet.create({
     marginVertical: 5,
     justifyContent: 'center',
     alignItems: 'center',
+    // backgroundColor: 'green',
   },
 });
