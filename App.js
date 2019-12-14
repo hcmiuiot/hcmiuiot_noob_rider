@@ -353,7 +353,9 @@ export default class App extends React.Component {
       <View style={style.container}>
         <StatusBar
           barStyle="dark-content"
-          backgroundColor="transparent"
+          backgroundColor={
+            this.state.isMqttConnected ? 'transparent' : '#ed156822'
+          }
           translucent
         />
         <View style={style.mapView}>
@@ -389,6 +391,8 @@ export default class App extends React.Component {
                     image={
                       mark.markType === 'police'
                         ? require('./assets/icons/police.png')
+                        : mark.markType === 'petro'
+                        ? require('./assets/icons/petro.png')
                         : require('./assets/icons/accident.png')
                     }
                     rotation={mark.heading}
@@ -464,35 +468,42 @@ export default class App extends React.Component {
                   }}>
                   <Icon
                     name="cog"
-                    size={30}
+                    size={35}
                     color="#11111188"
                     style={StyleSheet.absoluteFillObject}
                   />
                 </TouchableOpacity>
-                <Icon
+                {/* <Icon
                   name={
                     this.state.isMqttConnected ? 'check-circle' : 'times-circle'
                   }
                   solid
                   color={this.state.isMqttConnected ? '#00ff0088' : '#ff000088'}
-                  size={22}
+                  size={25}
                   style={style.statusIcon}
-                />
+                /> */}
               </View>
               <View style={style.fastToolView}>
                 <TouchableOpacity
                   onPress={() => {
+                    this.try2SendMark('petro');
+                  }}
+                  style={[style.fastToolTouch, {left: 5}]}>
+                  <Icon name="gas-pump" size={33} color={'green'} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
                     this.try2SendMark('accident');
                   }}
-                  style={style.fastToolTouch}>
-                  <Icon name="car-crash" size={22} />
+                  style={[style.fastToolTouch, {left: -2}]}>
+                  <Icon name="car-crash" size={33} color={'orange'} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
                     this.try2SendMark('police');
                   }}
                   style={style.fastToolTouch}>
-                  <Icon name="exclamation-circle" size={22} />
+                  <Icon name="exclamation-circle" size={35} color={'red'} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -525,30 +536,31 @@ const style = StyleSheet.create({
   },
   menuIconView: {
     position: 'absolute',
-    left: 0,
+    left: 5,
     top: 0,
     // flexDirection: 'row',
     width: 90,
-    height: 30,
+    height: 40,
     marginTop: 30,
     margin: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
   statusIcon: {
-    marginLeft: 15,
+    marginLeft: 25,
   },
   fastToolView: {
     position: 'absolute',
     left: 0,
-    top: 60,
+    top: 70,
     margin: 10,
     alignItems: 'center',
-    opacity: 0.5,
+    justifyContent: 'center',
+    opacity: 0.7,
   },
   fastToolTouch: {
-    height: 30,
-    width: 30,
+    height: 40,
+    width: 40,
     marginVertical: 5,
     justifyContent: 'center',
     alignItems: 'center',

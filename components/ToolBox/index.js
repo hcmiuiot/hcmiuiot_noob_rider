@@ -45,7 +45,7 @@ export default class ToolBox extends Component {
         </TouchableOpacity>
 
         {/* <Text style={style.copyrightText}>
-          Copyright © 2019 by ReactNativer
+          Speed: 60 km/h
         </Text> */}
 
         {/* <View style={style.switchArea}>
