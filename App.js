@@ -178,7 +178,7 @@ export default class App extends React.Component {
       console.log('Trying 2 send Mark');
 
       this.mqttService.publish(
-        Constants.PATTERN_TOPIC_MARK(this.state.phoneId),
+        Constants.PATTERN_TOPIC_MARK(this.state.phoneId + Date.now()),
         JSON.stringify({
           timestamp: Date.now(),
           markType,
@@ -386,7 +386,11 @@ export default class App extends React.Component {
                 mark.coord && (
                   <Marker
                     coordinate={mark.coord}
-                    image={require(`./assets/icons/police.png`)}
+                    image={
+                      mark.markType === 'police'
+                        ? require('./assets/icons/police.png')
+                        : require('./assets/icons/accident.png')
+                    }
                     rotation={mark.heading}
                     // flat={true}
                     opacity={0.9}
