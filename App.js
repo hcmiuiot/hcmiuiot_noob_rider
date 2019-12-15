@@ -542,22 +542,7 @@ export default class App extends React.Component {
                     source={require('./assets/icons/technical-support.png')}
                     style={{width: 40, height: 40}}
                   />
-                  {/* <Icon
-                    name="cog"
-                    size={35}
-                    color="#11111188"
-                    style={StyleSheet.absoluteFillObject}
-                  /> */}
                 </TouchableOpacity>
-                {/* <Icon
-                  name={
-                    this.state.isMqttConnected ? 'check-circle' : 'times-circle'
-                  }
-                  solid
-                  color={this.state.isMqttConnected ? '#00ff0088' : '#ff000088'}
-                  size={25}
-                  style={style.statusIcon}
-                /> */}
               </View>
               <View style={style.fastToolView}>
                 <TouchableOpacity
@@ -569,7 +554,6 @@ export default class App extends React.Component {
                     source={require('./assets/icons/gas-station.png')}
                     style={{width: 40, height: 40}}
                   />
-                  {/* <Icon name="gas-pump" size={33} color={'green'} /> */}
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
@@ -580,7 +564,6 @@ export default class App extends React.Component {
                     source={require('./assets/icons/car-accident.png')}
                     style={{width: 48, height: 48}}
                   />
-                  {/* <Icon name="car-crash" size={33} color={'orange'} /> */}
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
@@ -591,7 +574,6 @@ export default class App extends React.Component {
                     source={require('./assets/icons/police.png')}
                     style={{width: 45, height: 45}}
                   />
-                  {/* <Icon name="exclamation-circle" size={35} color={'red'} /> */}
                 </TouchableOpacity>
               </View>
             </View>
@@ -612,7 +594,6 @@ const style = StyleSheet.create({
     position: 'absolute',
     width: '100%',
     height: '100%',
-    // alignItems: 'flex-end',
   },
   bottomView: {
     position: 'absolute',
@@ -626,7 +607,6 @@ const style = StyleSheet.create({
     position: 'absolute',
     left: 5,
     top: 0,
-    // flexDirection: 'row',
     width: 90,
     height: 40,
     marginTop: 30,
@@ -652,7 +632,6 @@ const style = StyleSheet.create({
     marginVertical: 5,
     justifyContent: 'center',
     alignItems: 'center',
-    // backgroundColor: 'green',
   },
   marker: {
     flexDirection: 'row',
