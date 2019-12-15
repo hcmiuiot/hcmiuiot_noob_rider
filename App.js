@@ -1,14 +1,3 @@
-/* eslint-disable curly */
-/* eslint-disable react-native/no-inline-styles */
-/* eslint-disable no-alert */
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow
- */
-
 import React from 'react';
 import {
   StatusBar,
@@ -20,7 +9,6 @@ import {
   ToastAndroid,
   Image,
   Alert,
-  Text,
 } from 'react-native';
 
 import DeviceInfo from 'react-native-device-info';
@@ -36,7 +24,6 @@ import ToolBox from './components/ToolBox';
 import Sound from './services/Sound';
 
 import GGMap from './components/GGMap';
-import {throwStatement} from '@babel/types';
 
 console.disableYellowBox = true;
 
