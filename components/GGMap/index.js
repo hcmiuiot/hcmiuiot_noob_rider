@@ -168,7 +168,7 @@ export default class index extends Component {
         Constants.PATTERN_TOPIC_GPS(this.props.phoneId),
         JSON.stringify({
           timestamp: Date.now(),
-          user: this.state.user,
+          user: this.props.user,
           ...this.state.myGPS,
         }),
         () => {
@@ -253,7 +253,7 @@ export default class index extends Component {
         {Constants.SETTING_SHOW_TEAMMATE &&
           this.state.teammates.map(
             teammate =>
-              teammate.phoneId !== this.state.phoneId &&
+              teammate.phoneId !== this.props.phoneId && teammate.user &&
               teammate.coord && (
                 <Marker
                   coordinate={teammate.coord}

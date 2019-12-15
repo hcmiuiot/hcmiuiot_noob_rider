@@ -11,6 +11,8 @@ import {
   Alert,
 } from 'react-native';
 
+import {connect} from 'react-redux';
+
 import DeviceInfo from 'react-native-device-info';
 
 import KeepAwake from 'react-native-keep-awake';
@@ -27,7 +29,7 @@ import GGMap from './components/GGMap';
 
 console.disableYellowBox = true;
 
-export default class App extends React.Component {
+class App extends React.Component {
   constructor(props) {
     super(props);
 
@@ -223,6 +225,7 @@ export default class App extends React.Component {
             }}
             mqttService={this.mqttService}
             phoneId={this.state.phoneId}
+            user={this.state.user}
           />
 
           <View style={[style.bottomView]}>
@@ -235,7 +238,8 @@ export default class App extends React.Component {
               }}
               onCenter={() => {
                 this.map.centerMap(true);
-                this.setState({isMqttConnected: true});
+                this.props.dispatch({type: 'INCREMENT', num: 2});
+                // this.setState({isMqttConnected: true});
                 ToastAndroid.showWithGravity(
                   'Map centering',
                   ToastAndroid.SHORT,
@@ -368,3 +372,5 @@ const style = StyleSheet.create({
     alignItems: 'center',
   },
 });
+
+export default connect()(App);
