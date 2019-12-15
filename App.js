@@ -64,7 +64,16 @@ export default class App extends React.Component {
       user: {bikeName: 'unknown', riderName: 'unknown'},
       teammates: [],
       marks: [],
+      testSpeed: 90,
     };
+
+    // let b = 0;
+    // setInterval(() => {
+    //   if (this.state.myGPS) {
+    //     this.setState({testSpeed: this.state.testSpeed + 1});
+    //     // if (this.a) this.a.redraw();
+    //   }
+    // }, 1000);
 
     console.log('Phone ID:', this.state.phoneId);
     this.loadConfigAndConnect(true);
@@ -241,8 +250,8 @@ export default class App extends React.Component {
   onMapReadyEvent = () => {
     if (requestGeolocationPermission()) {
       Geolocation.watchPosition(
-        position => {
-          this.setState({
+        async position => {
+          await this.setState({
             myGPS: {
               coord: {
                 latitude: position.coords.latitude,
@@ -349,7 +358,7 @@ export default class App extends React.Component {
               cancelable: true,
             },
           )
-      : null;
+      : false;
     Storage.readConfigs(configs => {
       this.setState({
         user: {riderName: configs.riderName, bikeName: configs.bikeName},
@@ -388,59 +397,99 @@ export default class App extends React.Component {
             loadingEnabled={true}
             // showsTraffic={true}
             showsCompass={false}>
-            <Marker
+            {Constants.SETTING_SHOW_CAUTION &&
+              this.state.marks.map(
+                mark =>
+                  mark.coord && (
+                    <Marker
+                      coordinate={mark.coord}
+                      image={
+                        mark.markType === 'police'
+                          ? require('./assets/icons/police-officer.png')
+                          : mark.markType === 'petro'
+                          ? require('./assets/icons/petro.png')
+                          : require('./assets/icons/car-accident2.png')
+                      }
+                      rotation={mark.heading}
+                      // flat={true}
+                      opacity={0.9}
+                      // title={mark.user.riderName}
+                    />
+                  ),
+              )}
+
+            {/* {Constants.SETTING_SHOW_TEAMMATE &&
+              this.state.teammates.map(
+                teammate =>
+                  teammate.phoneId !== this.state.phoneId &&
+                  teammate.coord && (
+                    <Marker
+                      coordinate={teammate.coord}
+                      // rotation={teammate.heading}
+                      // flat={true}
+                      opacity={0.9}
+                    />
+                  ),
+              )} */}
+
+            {Constants.SETTING_SHOW_TEAMMATE &&
+              this.state.teammates.map(
+                teammate =>
+                  teammate.phoneId !== this.state.phoneId &&
+                  teammate.coord && (
+                    <Marker
+                      coordinate={teammate.coord}
+                      // rotation={teammate.heading}
+                      // flat={true}
+                      opacity={0.9}
+                      anchor={{x: 0.105, y: 0.8}}>
+                      <View style={style.marker}>
+                        <View>
+                          <Image
+                            source={require('./assets/icons/car.png')}
+                            style={style.markerIcon}
+                          />
+                        </View>
+                        <View style={[style.markerTooltip, {width: 120}]}>
+                          <Text style={{fontWeight: 'bold'}}>
+                            {teammate.user.riderName}
+                          </Text>
+                          <Text>{teammate.user.bikeName}</Text>
+                          <Text>{teammate.speed} km/h</Text>
+                        </View>
+                      </View>
+                    </Marker>
+                  ),
+              )}
+
+            {/* <Marker
               coordinate={this.state.myGPS.coord}
-              image={require('./assets/icons/navigation.png')}
               rotation={this.state.myGPS.heading}
               flat={true}
               opacity={0.9}
-              title={this.state.user.riderName}
-              description={this.state.user.bikeName}>
-              <Callout>
+            /> */}
+            <Marker
+              coordinate={this.state.myGPS.coord}
+              rotation={this.state.myGPS.heading}
+              flat={true}
+              opacity={0.9}
+              ref={ref => {
+                this.a = ref;
+              }}
+              anchor={{x: 0.17, y: 0.9}}>
+              <View style={style.marker}>
                 <View>
-                  <Text>Speed: {this.state.myGPS.speed}</Text>
-                </View>
-              </Callout>
-            </Marker>
-
-            {this.state.marks.map(
-              mark =>
-                mark.coord && (
-                  <Marker
-                    coordinate={mark.coord}
-                    image={
-                      mark.markType === 'police'
-                        ? require('./assets/icons/police-officer.png')
-                        : mark.markType === 'petro'
-                        ? require('./assets/icons/petro.png')
-                        : require('./assets/icons/car-accident2.png')
-                    }
-                    rotation={mark.heading}
-                    // flat={true}
-                    opacity={0.9}
-                    // title={mark.user.riderName}
+                  <Image
+                    source={require('./assets/icons/navigation.png')}
+                    style={style.markerIcon}
                   />
-                ),
-            )}
-
-            {this.state.teammates.map(
-              teammate =>
-                teammate.phoneId !== this.state.phoneId &&
-                teammate.coord && (
-                  <Marker
-                    coordinate={teammate.coord}
-                    image={require('./assets/icons/navigation2.png')}
-                    rotation={teammate.heading}
-                    flat={true}
-                    opacity={0.9}
-                    title={teammate.user.riderName}
-                    description={teammate.user.bikeName}>
-                    {/* <View style={{backgroundColor: 'red', padding: 10}}>
-                    <Text>{teammate.name}</Text>
-                  </View> */}
-                  </Marker>
-                ),
-            )}
+                </View>
+                <View style={style.markerTooltip}>
+                  <Text style={{fontWeight: 'bold'}}>You</Text>
+                  <Text>{this.state.myGPS.speed} km/h</Text>
+                </View>
+              </View>
+            </Marker>
           </MapView>
 
           <View style={[style.bottomView]}>
@@ -475,7 +524,7 @@ export default class App extends React.Component {
               }}
               onSave={() => {
                 this.loadConfigAndConnect();
-
+                Sound.play(Sound.DANCE);
                 this.setState({showConfigScreen: false});
               }}
             />
@@ -604,5 +653,25 @@ const style = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     // backgroundColor: 'green',
+  },
+  marker: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  markerIcon: {
+    width: 40,
+    height: 40,
+  },
+  teammateIcon: {
+    width: 35,
+    height: 35,
+  },
+  markerTooltip: {
+    marginLeft: 5,
+    borderRadius: 15,
+    padding: 5,
+    width: 75,
+    backgroundColor: '#cfcfcfBB',
   },
 });

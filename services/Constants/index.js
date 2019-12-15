@@ -9,6 +9,9 @@ const Constants = {
   PATTERN_TOPIC_GPS: id => `nr/gps/${id}`,
   PATTERN_TOPIC_CHAT: id => `nr/chat/${id}`,
   PATTERN_TOPIC_MARK: id => `nr/mark/${id}`,
+
+  SETTING_SHOW_TEAMMATE: true,
+  SETTING_SHOW_CAUTION: false,
 };
 
 export default Constants;
