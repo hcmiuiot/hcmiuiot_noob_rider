@@ -23,25 +23,20 @@ import {
   Text,
 } from 'react-native';
 
-import update from 'immutability-helper';
-
 import DeviceInfo from 'react-native-device-info';
 
-import Geolocation from 'react-native-geolocation-service';
 import KeepAwake from 'react-native-keep-awake';
-import MapView, {Marker, Callout} from 'react-native-maps';
-// import Proximity from 'react-native-proximity';
-// import Icon from 'react-native-vector-icons/FontAwesome5';
 import ChatBox from './components/ChatBox';
 import ConfigScreeen from './screens/ConfigScreen';
 import Constants from './services/Constants';
 import MqttService from './services/MqttService';
-import {requestGeolocationPermission} from './services/Permission';
+
 import Storage from './services/Storage';
 import ToolBox from './components/ToolBox';
 import Sound from './services/Sound';
 
-import haversine from 'haversine-distance';
+import GGMap from './components/GGMap';
+import {throwStatement} from '@babel/types';
 
 console.disableYellowBox = true;
 
@@ -54,118 +49,27 @@ export default class App extends React.Component {
     KeepAwake.activate();
 
     this.state = {
-      myGPS: {
-        coord: {latitude: 10.8381656, longitude: 106.6302742},
-        heading: 0,
-        speed: 0,
-      },
       isMqttConnected: false,
       isFollowUser: true,
       showConfigScreen: false,
       phoneId: DeviceInfo.getUniqueId(),
       user: {bikeName: 'unknown', riderName: 'unknown'},
-      teammates: [],
-      marks: [],
-      testSpeed: 90,
       msg: '',
     };
-
-    // let b = 0;
-    // setInterval(() => {
-    //   if (this.state.myGPS) {
-    //     this.setState({testSpeed: this.state.testSpeed + 1});
-    //     // if (this.a) this.a.redraw();
-    //   }
-    // }, 1000);
 
     console.log('Phone ID:', this.state.phoneId);
     this.loadConfigAndConnect(true);
   }
 
-  cautionPolice() {
-    let polices = this.state.marks.filter(mark => {
-      // console.log(mark.markType);
-      return mark.markType === 'police';
-    });
-
-    polices.map(police => {
-      let ourGps = {
-        lat: this.state.myGPS.coord.latitude,
-        lon: this.state.myGPS.coord.longitude,
-      };
-      let copGps = {lat: police.coord.latitude, lon: police.coord.longitude};
-      let distance = haversine(ourGps, copGps);
-
-      if (distance <= Constants.POLICE_CAUTION_DISTANCE) {
-        this.setState({
-          msg: `Carefully nearby POLICE! (${(distance / 1000).toFixed(1)} km)`,
-        });
-      }
-    });
-  }
-
-  findTeammateIndexByPhoneId(phoneId) {
-    return this.state.teammates.findIndex(teammate => {
-      return teammate.phoneId === phoneId;
-    });
-  }
-
-  findGpsIndexByPhoneId(phoneId) {
-    return this.state.gps.findIndex(gps => {
-      return gps.phoneId === phoneId;
-    });
-  }
-
   handleGps(phoneId, msg) {
-    if (msg.timestamp && Date.now() - msg.timestamp <= Constants.MAX_AGE) {
-      let foundIdx = this.findTeammateIndexByPhoneId(phoneId);
-      let newGpsPacket = {phoneId, ...msg};
-      if (foundIdx === -1) {
-        this.setState({
-          teammates: update(this.state.teammates, {$push: [newGpsPacket]}),
-        });
-      } else {
-        this.setState({
-          teammates: update(this.state.teammates, {
-            [foundIdx]: {$set: newGpsPacket},
-          }),
-        });
-      }
-
-      this.setState({
-        teammates: this.state.teammates.filter(teammate => {
-          return Date.now() - teammate.timestamp <= Constants.MAX_AGE;
-        }),
-      });
-      // console.log(
-      //   'this.state.teammates',
-      //   JSON.stringify(this.state.teammates, null, 2),
-      // );
+    if (this.map) {
+      this.map.handleGps(phoneId, msg);
     }
   }
 
   handleMark(phoneId, msg) {
-    if (msg.timestamp && Date.now() - msg.timestamp <= Constants.MAX_MARK_AGE) {
-      let newMarkPacket = {phoneId, ...msg};
-      switch (newMarkPacket.markType) {
-        case 'police': {
-          Sound.play(Sound.CORTADO);
-          break;
-        }
-        case 'accident': {
-          Sound.play(Sound.OH_HELL_NO);
-          break;
-        }
-        case 'petro': {
-          Sound.play(Sound.SELFIE);
-          break;
-        }
-      }
-      // console.log(newMarkPacket);
-
-      this.setState({
-        marks: update(this.state.marks, {$push: [newMarkPacket]}),
-      });
+    if (this.map) {
+      this.map.handleMark(phoneId, msg);
     }
   }
 
@@ -203,46 +107,6 @@ export default class App extends React.Component {
     }
   };
 
-  try2SendGps() {
-    if (this.mqttService && this.mqttService.isConnected()) {
-      // this.noticeIamOnline();
-      console.log('Trying 2 send GPS');
-
-      this.mqttService.publish(
-        Constants.PATTERN_TOPIC_GPS(this.state.phoneId),
-        JSON.stringify({
-          timestamp: Date.now(),
-          user: this.state.user,
-          ...this.state.myGPS,
-        }),
-        () => {
-          console.log('Send GPS ok!');
-        },
-        {qos: 1, retain: true},
-      );
-    }
-  }
-
-  try2SendMark(markType) {
-    if (this.mqttService && this.mqttService.isConnected()) {
-      // this.noticeIamOnline();
-      console.log('Trying 2 send Mark');
-
-      this.mqttService.publish(
-        Constants.PATTERN_TOPIC_MARK(this.state.phoneId + Date.now()),
-        JSON.stringify({
-          timestamp: Date.now(),
-          markType,
-          ...this.state.myGPS,
-        }),
-        () => {
-          console.log('Send Mark ok!');
-        },
-        {qos: 1, retain: true},
-      );
-    }
-  }
-
   try2SendChat(from, msg) {
     if (this.mqttService && this.mqttService.isConnected()) {
       console.log('Trying 2 send Chat');
@@ -261,63 +125,6 @@ export default class App extends React.Component {
   onChatSend = msg => {
     if (this.state.user.riderName) {
       this.try2SendChat(this.state.user.riderName, msg);
-    }
-  };
-
-  centerMap(force = false) {
-    this.cautionPolice();
-    if (this.mapView) {
-      if (force || this.state.isFollowUser) {
-        let camera = {
-          center: this.state.myGPS.coord,
-          pitch: this.mapView.getCamera().pitch,
-          heading: this.state.myGPS.heading,
-          // Only on iOS MapKit, in meters. The property is ignored by Google Maps.
-          altitude: 0,
-          // Only when using Google Maps.
-          // zoom: number
-        };
-        if (this.state.myGPS.speed < 5) {
-          this.mapView.animateToCoordinate(this.state.myGPS.coord, 500);
-        } else {
-          this.mapView.animateCamera(camera, 500);
-        }
-      }
-      // this.mapView.fitToElements(true);
-    }
-  }
-
-  onMapReadyEvent = () => {
-    if (requestGeolocationPermission()) {
-      Geolocation.watchPosition(
-        async position => {
-          await this.setState({
-            myGPS: {
-              coord: {
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-              },
-              heading: position.coords.heading,
-              speed:
-                position.coords.speed && position.coords.speed > 0.83
-                  ? (position.coords.speed * 3.6).toFixed(2)
-                  : 0,
-            },
-          });
-
-          this.cautionPolice();
-          this.try2SendGps();
-          this.centerMap();
-        },
-        error => {},
-        {
-          enableHighAccuracy: true,
-          distanceFilter: 3,
-          interval: 3000,
-          fastestInterval: 2000,
-          forceRequestLocation: true,
-        },
-      );
     }
   };
 
@@ -423,115 +230,13 @@ export default class App extends React.Component {
           translucent
         />
         <View style={style.mapView}>
-          <MapView
-            style={[StyleSheet.absoluteFillObject]}
-            initialRegion={{
-              latitude: 10.8777063,
-              longitude: 106.8006299,
-              latitudeDelta: 0.03,
-              longitudeDelta: 0.02,
-            }}
+          <GGMap
             ref={ref => {
-              this.mapView = ref;
+              this.map = ref;
             }}
-            onMapReady={this.onMapReadyEvent}
-            loadingEnabled={true}
-            // showsTraffic={true}
-            showsCompass={false}>
-            {Constants.SETTING_SHOW_CAUTION &&
-              this.state.marks.map(
-                mark =>
-                  mark.coord && (
-                    <Marker
-                      coordinate={mark.coord}
-                      image={
-                        mark.markType === 'police'
-                          ? require('./assets/icons/police-officer.png')
-                          : mark.markType === 'petro'
-                          ? require('./assets/icons/petro.png')
-                          : require('./assets/icons/car-accident2.png')
-                      }
-                      rotation={mark.heading}
-                      // flat={true}
-                      opacity={0.9}
-                      // title={mark.user.riderName}
-                    />
-                  ),
-              )}
-
-            {/* {Constants.SETTING_SHOW_TEAMMATE &&
-              this.state.teammates.map(
-                teammate =>
-                  teammate.phoneId !== this.state.phoneId &&
-                  teammate.coord && (
-                    <Marker
-                      coordinate={teammate.coord}
-                      // rotation={teammate.heading}
-                      // flat={true}
-                      opacity={0.9}
-                    />
-                  ),
-              )} */}
-
-            {Constants.SETTING_SHOW_TEAMMATE &&
-              this.state.teammates.map(
-                teammate =>
-                  teammate.phoneId !== this.state.phoneId &&
-                  teammate.coord && (
-                    <Marker
-                      coordinate={teammate.coord}
-                      // rotation={teammate.heading}
-                      // flat={true}
-                      opacity={0.9}
-                      anchor={{x: 0.105, y: 0.8}}>
-                      <View style={style.marker}>
-                        <View>
-                          <Image
-                            source={require('./assets/icons/car.png')}
-                            style={style.markerIcon}
-                          />
-                        </View>
-                        <View style={[style.markerTooltip, {width: 120}]}>
-                          <Text style={{fontWeight: 'bold'}}>
-                            {teammate.user.riderName}
-                          </Text>
-                          <Text>{teammate.user.bikeName}</Text>
-                          <Text>{teammate.speed} km/h</Text>
-                        </View>
-                      </View>
-                    </Marker>
-                  ),
-              )}
-
-            {/* <Marker
-              coordinate={this.state.myGPS.coord}
-              rotation={this.state.myGPS.heading}
-              flat={true}
-              opacity={0.9}
-            /> */}
-            <Marker
-              coordinate={this.state.myGPS.coord}
-              rotation={this.state.myGPS.heading}
-              flat={true}
-              opacity={0.9}
-              ref={ref => {
-                this.a = ref;
-              }}
-              anchor={{x: 0.17, y: 0.9}}>
-              <View style={style.marker}>
-                <View>
-                  <Image
-                    source={require('./assets/icons/navigation.png')}
-                    style={style.markerIcon}
-                  />
-                </View>
-                <View style={style.markerTooltip}>
-                  <Text style={{fontWeight: 'bold'}}>You</Text>
-                  <Text>{this.state.myGPS.speed} km/h</Text>
-                </View>
-              </View>
-            </Marker>
-          </MapView>
+            mqttService={this.mqttService}
+            phoneId={this.state.phoneId}
+          />
 
           <View style={[style.bottomView]}>
             <ToolBox
@@ -542,7 +247,7 @@ export default class App extends React.Component {
                 this.setState({isFollowUser});
               }}
               onCenter={() => {
-                this.centerMap(true);
+                this.map.centerMap(true);
                 this.setState({isMqttConnected: true});
                 ToastAndroid.showWithGravity(
                   'Map centering',
@@ -589,7 +294,7 @@ export default class App extends React.Component {
               <View style={style.fastToolView}>
                 <TouchableOpacity
                   onPress={() => {
-                    this.try2SendMark('petro');
+                    this.map.try2SendMark('petro');
                   }}
                   style={style.fastToolTouch}>
                   <Image
@@ -599,7 +304,7 @@ export default class App extends React.Component {
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
-                    this.try2SendMark('accident');
+                    this.map.try2SendMark('accident');
                   }}
                   style={style.fastToolTouch}>
                   <Image
@@ -609,7 +314,7 @@ export default class App extends React.Component {
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
-                    this.try2SendMark('police');
+                    this.map.try2SendMark('police');
                   }}
                   style={[style.fastToolTouch, {top: 5}]}>
                   <Image
@@ -674,25 +379,5 @@ const style = StyleSheet.create({
     marginVertical: 5,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  marker: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  markerIcon: {
-    width: 40,
-    height: 40,
-  },
-  teammateIcon: {
-    width: 35,
-    height: 35,
-  },
-  markerTooltip: {
-    marginLeft: 5,
-    borderRadius: 15,
-    padding: 5,
-    width: 75,
-    backgroundColor: '#cfcfcfBB',
   },
 });
