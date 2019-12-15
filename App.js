@@ -98,7 +98,7 @@ export default class App extends React.Component {
 
       if (distance <= Constants.POLICE_CAUTION_DISTANCE) {
         this.setState({
-          msg: `Carefully nearby POLICE! (${(distance / 1000).toFixed(1)} m)`,
+          msg: `Carefully nearby POLICE! (${(distance / 1000).toFixed(1)} km)`,
         });
       }
     });
