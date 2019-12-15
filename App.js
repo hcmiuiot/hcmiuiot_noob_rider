@@ -20,7 +20,7 @@ import {
   ToastAndroid,
   Image,
   Alert,
-  // Text,
+  Text,
 } from 'react-native';
 
 import update from 'immutability-helper';
@@ -29,9 +29,9 @@ import DeviceInfo from 'react-native-device-info';
 
 import Geolocation from 'react-native-geolocation-service';
 import KeepAwake from 'react-native-keep-awake';
-import MapView, {Marker} from 'react-native-maps';
+import MapView, {Marker, Callout} from 'react-native-maps';
 // import Proximity from 'react-native-proximity';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+// import Icon from 'react-native-vector-icons/FontAwesome5';
 import ChatBox from './components/ChatBox';
 import ConfigScreeen from './screens/ConfigScreen';
 import Constants from './services/Constants';
@@ -221,7 +221,7 @@ export default class App extends React.Component {
       if (force || this.state.isFollowUser) {
         let camera = {
           center: this.state.myGPS.coord,
-          pitch: 0,
+          pitch: this.mapView.getCamera().pitch,
           heading: this.state.myGPS.heading,
           // Only on iOS MapKit, in meters. The property is ignored by Google Maps.
           altitude: 0,
@@ -395,8 +395,13 @@ export default class App extends React.Component {
               flat={true}
               opacity={0.9}
               title={this.state.user.riderName}
-              description={this.state.user.bikeName}
-            />
+              description={this.state.user.bikeName}>
+              <Callout>
+                <View>
+                  <Text>Speed: {this.state.myGPS.speed}</Text>
+                </View>
+              </Callout>
+            </Marker>
 
             {this.state.marks.map(
               mark =>
