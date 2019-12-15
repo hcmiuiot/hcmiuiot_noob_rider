@@ -41,6 +41,8 @@ import Storage from './services/Storage';
 import ToolBox from './components/ToolBox';
 import Sound from './services/Sound';
 
+import haversine from 'haversine-distance';
+
 console.disableYellowBox = true;
 
 export default class App extends React.Component {
@@ -65,6 +67,7 @@ export default class App extends React.Component {
       teammates: [],
       marks: [],
       testSpeed: 90,
+      msg: '',
     };
 
     // let b = 0;
@@ -77,6 +80,28 @@ export default class App extends React.Component {
 
     console.log('Phone ID:', this.state.phoneId);
     this.loadConfigAndConnect(true);
+  }
+
+  cautionPolice() {
+    let polices = this.state.marks.filter(mark => {
+      // console.log(mark.markType);
+      return mark.markType === 'police';
+    });
+
+    polices.map(police => {
+      let ourGps = {
+        lat: this.state.myGPS.coord.latitude,
+        lon: this.state.myGPS.coord.longitude,
+      };
+      let copGps = {lat: police.coord.latitude, lon: police.coord.longitude};
+      let distance = haversine(ourGps, copGps);
+
+      if (distance <= Constants.POLICE_CAUTION_DISTANCE) {
+        this.setState({
+          msg: `Carefully nearby POLICE! (${(distance / 1000).toFixed(1)} m)`,
+        });
+      }
+    });
   }
 
   findTeammateIndexByPhoneId(phoneId) {
@@ -112,17 +137,31 @@ export default class App extends React.Component {
           return Date.now() - teammate.timestamp <= Constants.MAX_AGE;
         }),
       });
-      console.log(
-        'this.state.teammates',
-        JSON.stringify(this.state.teammates, null, 2),
-      );
+      // console.log(
+      //   'this.state.teammates',
+      //   JSON.stringify(this.state.teammates, null, 2),
+      // );
     }
   }
 
   handleMark(phoneId, msg) {
     if (msg.timestamp && Date.now() - msg.timestamp <= Constants.MAX_MARK_AGE) {
       let newMarkPacket = {phoneId, ...msg};
-      console.log(newMarkPacket);
+      switch (newMarkPacket.markType) {
+        case 'police': {
+          Sound.play(Sound.CORTADO);
+          break;
+        }
+        case 'accident': {
+          Sound.play(Sound.OH_HELL_NO);
+          break;
+        }
+        case 'petro': {
+          Sound.play(Sound.SELFIE);
+          break;
+        }
+      }
+      // console.log(newMarkPacket);
 
       this.setState({
         marks: update(this.state.marks, {$push: [newMarkPacket]}),
@@ -226,6 +265,7 @@ export default class App extends React.Component {
   };
 
   centerMap(force = false) {
+    this.cautionPolice();
     if (this.mapView) {
       if (force || this.state.isFollowUser) {
         let camera = {
@@ -265,6 +305,7 @@ export default class App extends React.Component {
             },
           });
 
+          this.cautionPolice();
           this.try2SendGps();
           this.centerMap();
         },
@@ -496,6 +537,7 @@ export default class App extends React.Component {
             <ToolBox
               style={style.toolBox}
               isFollowUser={this.state.isFollowUser}
+              message={this.state.msg}
               onChangeMode={isFollowUser => {
                 this.setState({isFollowUser});
               }}

@@ -10,6 +10,8 @@ const Constants = {
   PATTERN_TOPIC_CHAT: id => `nr/chat/${id}`,
   PATTERN_TOPIC_MARK: id => `nr/mark/${id}`,
 
+  POLICE_CAUTION_DISTANCE: 2000, //meter
+
   SETTING_SHOW_TEAMMATE: true,
   SETTING_SHOW_CAUTION: true,
 };

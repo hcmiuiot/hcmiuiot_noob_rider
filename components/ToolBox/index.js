@@ -45,10 +45,7 @@ export default class ToolBox extends Component {
           <Text style={style.lockText}>{mode_str}</Text>
         </TouchableOpacity>
 
-        {/* <Text style={style.copyrightText}>
-          Speed: 60 km/h
-        </Text> */}
-
+        <Text style={style.copyrightText}>{this.props.message || ''}</Text>
       </LinearGradient>
     );
   }

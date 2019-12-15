@@ -12,6 +12,7 @@
   "dependencies": {
     "@react-native-community/async-storage": "^1.6.3",
     "@taoqf/react-native-mqtt": "^3.0.4",
+    "haversine-distance": "^1.1.6",
     "immutability-helper": "^3.0.1",
     "moment": "^2.24.0",
     "mqtt": "^3.0.0",
