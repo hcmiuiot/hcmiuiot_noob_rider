@@ -11,7 +11,7 @@ const Constants = {
   PATTERN_TOPIC_MARK: id => `nr/mark/${id}`,
 
   SETTING_SHOW_TEAMMATE: true,
-  SETTING_SHOW_CAUTION: false,
+  SETTING_SHOW_CAUTION: true,
 };
 
 export default Constants;
